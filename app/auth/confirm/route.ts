@@ -19,7 +19,9 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
   const nextPath = safeNextPath(searchParams.get("next"));
-  const redirectTo = new URL(nextPath, request.url);
+  const pendingUrl = new URL("/pending", request.url);
+  pendingUrl.searchParams.set("next", nextPath);
+  const nextUrl = new URL(nextPath, request.url);
 
   if (token_hash && type) {
     const supabase = await createClient();
@@ -29,7 +31,24 @@ export async function GET(request: NextRequest) {
     });
 
     if (!error) {
-      return NextResponse.redirect(redirectTo);
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData.user;
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role, is_approved")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profile?.is_approved || profile?.role === "admin") {
+          return NextResponse.redirect(nextUrl);
+        }
+
+        return NextResponse.redirect(pendingUrl);
+      }
+
+      return NextResponse.redirect(pendingUrl);
     }
   }
 

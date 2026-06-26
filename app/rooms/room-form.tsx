@@ -2,13 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { RoomRow } from "./types";
 
 export default function RoomForm({
   currentUserId,
+  selectedRoom,
+  onCancelEdit,
+  onSaved,
 }: {
   currentUserId: string | null;
+  selectedRoom: RoomRow | null;
+  onCancelEdit: () => void;
+  onSaved: () => void;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -19,6 +26,15 @@ export default function RoomForm({
   const [isActive, setIsActive] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const isEditing = selectedRoom !== null;
+
+  useEffect(() => {
+    setName(selectedRoom?.name ?? "");
+    setRoomNumber(selectedRoom?.room_number ?? "");
+    setCapacity(selectedRoom ? String(selectedRoom.capacity) : "8");
+    setDescription(selectedRoom?.description ?? "");
+    setIsActive(selectedRoom?.is_active ?? true);
+  }, [selectedRoom]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -32,28 +48,36 @@ export default function RoomForm({
     }
 
     try {
-      const { error } = await supabase.from("rooms").insert({
+      const roomPayload = {
         name,
         room_number: roomNumber,
         capacity: Number(capacity),
         description: description || null,
         is_active: isActive,
-        created_by: currentUserId,
-      });
+      };
+
+      const { error } = isEditing
+        ? await supabase.from("rooms").update(roomPayload).eq("id", selectedRoom.id)
+        : await supabase.from("rooms").insert({
+            ...roomPayload,
+            created_by: currentUserId,
+          });
 
       if (error) {
         throw error;
       }
 
-      setName("");
-      setRoomNumber("");
-      setCapacity("8");
-      setDescription("");
-      setIsActive(true);
-      setMessage("회의실을 추가했습니다.");
+      setMessage(isEditing ? "회의실을 수정했습니다." : "회의실을 추가했습니다.");
+      onSaved();
       router.refresh();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "회의실 추가에 실패했습니다.");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : isEditing
+            ? "회의실 수정에 실패했습니다."
+            : "회의실 추가에 실패했습니다.",
+      );
     } finally {
       setSaving(false);
     }
@@ -61,6 +85,8 @@ export default function RoomForm({
 
   return (
     <form className="stack-form" onSubmit={handleSubmit}>
+      {isEditing ? <p className="resource-note">현재 선택된 회의실을 편집 중입니다.</p> : null}
+
       <label>
         <span>회의실 이름</span>
         <input
@@ -112,8 +138,14 @@ export default function RoomForm({
       </label>
 
       <button type="submit" disabled={saving}>
-        {saving ? "저장 중..." : "회의실 추가"}
+        {saving ? "저장 중..." : isEditing ? "수정 저장" : "회의실 추가"}
       </button>
+
+      {isEditing ? (
+        <button type="button" className="ghost-button" onClick={onCancelEdit}>
+          편집 취소
+        </button>
+      ) : null}
 
       {message ? <p className="resource-message">{message}</p> : null}
     </form>

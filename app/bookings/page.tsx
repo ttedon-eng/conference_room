@@ -2,6 +2,7 @@ import DashboardShell from "@/components/dashboard-shell";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import BookingForm from "./booking-form";
+import MyBookingsList from "./my-bookings-list";
 
 type RoomRow = {
   id: string;
@@ -11,6 +12,7 @@ type RoomRow = {
 
 type BookingRow = {
   id: string;
+  user_id: string;
   room_id: string;
   start_at: string;
   end_at: string;
@@ -46,11 +48,17 @@ export default async function BookingsPage() {
   const [
     { data: rooms, error: roomsError },
     { data: bookings, error: bookingsError },
+    { data: myBookings, error: myBookingsError },
   ] = await Promise.all([
     supabase.from("rooms").select("id, name, room_number").order("name", { ascending: true }),
     supabase
       .from("bookings")
-      .select("id, room_id, start_at, end_at, title, notes")
+      .select("id, user_id, room_id, start_at, end_at, title, notes")
+      .order("start_at", { ascending: true }),
+    supabase
+      .from("bookings")
+      .select("id, user_id, room_id, start_at, end_at, title, notes")
+      .eq("user_id", user.id)
       .order("start_at", { ascending: true }),
   ]);
 
@@ -62,9 +70,14 @@ export default async function BookingsPage() {
     throw bookingsError;
   }
 
+  if (myBookingsError) {
+    throw myBookingsError;
+  }
+
   const currentUserId = user.id;
   const roomItems = (rooms ?? []) as RoomRow[];
   const bookingItems = (bookings ?? []) as BookingRow[];
+  const myBookingItems = (myBookings ?? []) as BookingRow[];
   const roomLabelById = new Map(roomItems.map((room) => [room.id, room]));
 
   return (
@@ -110,6 +123,17 @@ export default async function BookingsPage() {
           ) : (
             <p className="resource-empty">아직 예약이 없습니다. 오른쪽 폼으로 첫 예약을 추가하세요.</p>
           )}
+
+          <div className="own-bookings-section">
+            <div className="section-head">
+              <p className="eyebrow">Mine</p>
+              <h2>내 예약</h2>
+            </div>
+            <p className="resource-note">
+              내가 만든 예약만 보여줍니다. 삭제는 한 번 더 확인한 뒤에만 진행됩니다.
+            </p>
+            <MyBookingsList currentUserId={currentUserId} bookings={myBookingItems} rooms={roomItems} />
+          </div>
         </article>
 
         <aside className="resource-panel">

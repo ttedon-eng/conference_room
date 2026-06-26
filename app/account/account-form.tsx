@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { FormEvent } from "react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -9,7 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 type Profile = {
   full_name: string | null;
   avatar_url: string | null;
-  role: string | null;
+  role: "user" | "admin" | null;
   is_approved: boolean;
 };
 
@@ -70,9 +71,16 @@ export default function AccountForm({
           <p className="eyebrow">Account</p>
           <h1>내 계정</h1>
         </div>
-        <button type="button" className="ghost-button" onClick={signOut}>
-          로그아웃
-        </button>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "flex-end" }}>
+          {isAdmin ? (
+            <Link className="ghost-link" href="/admin/approvals">
+              승인 관리
+            </Link>
+          ) : null}
+          <button type="button" className="ghost-button" onClick={signOut}>
+            로그아웃
+          </button>
+        </div>
       </div>
 
       <div className="account-badges">

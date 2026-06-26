@@ -8,6 +8,16 @@ import { createClient } from "@/lib/supabase/client";
 type Mode = "login" | "signup";
 
 const DEFAULT_NEXT_PATH = "/account";
+const ALLOWED_SIGNUP_DOMAINS = ["samsung.com", "partner.samsung.com"] as const;
+
+function getEmailDomain(value: string) {
+  const parts = value.trim().toLowerCase().split("@");
+  return parts[parts.length - 1] ?? "";
+}
+
+function canSignUpWithEmail(value: string) {
+  return ALLOWED_SIGNUP_DOMAINS.includes(getEmailDomain(value) as (typeof ALLOWED_SIGNUP_DOMAINS)[number]);
+}
 
 function safeNextPath(value: string | null) {
   const nextPath = value?.trim();
@@ -41,8 +51,15 @@ export default function LoginPage({
 
     try {
       if (mode === "signup") {
+        if (!canSignUpWithEmail(email)) {
+          setMessage(
+            `가입은 ${ALLOWED_SIGNUP_DOMAINS.join(", ")} 이메일만 가능합니다.`,
+          );
+          return;
+        }
+
         const { error } = await supabase.auth.signUp({
-          email,
+          email: email.trim().toLowerCase(),
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(nextPath)}`,
@@ -57,8 +74,9 @@ export default function LoginPage({
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      const normalizedEmail = email.trim().toLowerCase();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
         password,
       });
 
@@ -66,7 +84,24 @@ export default function LoginPage({
         throw error;
       }
 
-      router.push(nextPath);
+      const userId = data.user?.id;
+
+      if (!userId) {
+        throw new Error("로그인 후 사용자 정보를 확인할 수 없습니다.");
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role, is_approved")
+        .eq("id", userId)
+        .maybeSingle();
+
+      const destination =
+        profile?.is_approved || profile?.role === "admin"
+          ? nextPath
+          : `/pending?next=${encodeURIComponent(nextPath)}`;
+
+      router.push(destination);
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "로그인에 실패했습니다.");

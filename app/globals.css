@@ -427,6 +427,11 @@ button[type="submit"]:hover:not(:disabled) {
   padding: 18px;
 }
 
+.resource-item.is-selected {
+  border-color: rgba(15, 118, 110, 0.35);
+  box-shadow: 0 0 0 1px rgba(15, 118, 110, 0.12) inset;
+}
+
 .resource-item-top {
   display: flex;
   gap: 12px;
@@ -467,6 +472,93 @@ button[type="submit"]:hover:not(:disabled) {
   line-height: 1.7;
 }
 
+.resource-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.room-action-button {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 10px 14px;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.room-action-button:hover {
+  transform: translateY(-1px);
+}
+
+.room-action-button.is-destructive {
+  border-color: rgba(180, 83, 9, 0.24);
+  background: rgba(255, 247, 237, 0.92);
+  color: #9a3412;
+}
+
+.own-bookings-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.resource-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.delete-confirm {
+  margin-top: 16px;
+  border: 1px solid rgba(180, 83, 9, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 247, 237, 0.75);
+  padding: 16px;
+}
+
+.delete-confirm p {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.danger-button,
+.danger-outline {
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.danger-button {
+  border: 1px solid transparent;
+  background: #b45309;
+  color: #fff;
+}
+
+.danger-outline {
+  border: 1px solid rgba(180, 83, 9, 0.28);
+  background: rgba(255, 255, 255, 0.78);
+  color: #b45309;
+}
+
+.danger-button:hover:not(:disabled),
+.danger-outline:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
 .resource-empty,
 .resource-note,
 .resource-message {
@@ -502,6 +594,10 @@ button[type="submit"]:hover:not(:disabled) {
 
 .status-pill.is-inactive {
   color: #b45309;
+}
+
+.status-pill.is-owner {
+  color: #0f4c81;
 }
 
 .stack-form {
@@ -541,6 +637,13 @@ button[type="submit"]:hover:not(:disabled) {
   min-height: 48px;
   border-radius: 16px;
   cursor: pointer;
+}
+
+.danger-button:disabled,
+.danger-outline:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
 }
 
 .checkbox-row {
