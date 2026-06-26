@@ -3,13 +3,8 @@
 import type { FormEvent } from "react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-
-type Claims = {
-  sub: string;
-  email?: string;
-  [key: string]: unknown;
-};
 
 type Profile = {
   full_name: string | null;
@@ -19,10 +14,10 @@ type Profile = {
 };
 
 export default function AccountForm({
-  claims,
+  user,
   initialProfile,
 }: {
-  claims: Claims;
+  user: Pick<User, "id" | "email">;
   initialProfile: Profile | null;
 }) {
   const router = useRouter();
@@ -42,8 +37,8 @@ export default function AccountForm({
 
     try {
       const { error } = await supabase.from("profiles").upsert({
-        id: claims.sub,
-        email: claims.email ?? null,
+        id: user.id,
+        email: user.email ?? null,
         full_name: fullName,
         avatar_url: avatarUrl,
         updated_at: new Date().toISOString(),
@@ -64,7 +59,7 @@ export default function AccountForm({
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    router.push("/login");
+    router.push("/login?next=%2Faccount");
     router.refresh();
   };
 
@@ -81,7 +76,7 @@ export default function AccountForm({
       </div>
 
       <div className="account-badges">
-        <span>{claims.email}</span>
+        <span>{user.email ?? "이메일 없음"}</span>
         <span>{isApproved ? "승인됨" : "승인 대기"}</span>
         {isAdmin ? <span>관리자</span> : null}
       </div>

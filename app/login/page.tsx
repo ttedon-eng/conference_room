@@ -7,7 +7,23 @@ import { createClient } from "@/lib/supabase/client";
 
 type Mode = "login" | "signup";
 
-export default function LoginPage() {
+const DEFAULT_NEXT_PATH = "/account";
+
+function safeNextPath(value: string | null) {
+  const nextPath = value?.trim();
+
+  if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//") || nextPath.includes("://")) {
+    return DEFAULT_NEXT_PATH;
+  }
+
+  return nextPath;
+}
+
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams?: { next?: string | string[] };
+}) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [mode, setMode] = useState<Mode>("login");
@@ -15,6 +31,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const nextValue = Array.isArray(searchParams?.next) ? searchParams?.next[0] : searchParams?.next;
+  const nextPath = safeNextPath(nextValue ?? null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -27,7 +45,7 @@ export default function LoginPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/confirm`,
+            emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(nextPath)}`,
           },
         });
 
@@ -48,7 +66,7 @@ export default function LoginPage() {
         throw error;
       }
 
-      router.push("/account");
+      router.push(nextPath);
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "로그인에 실패했습니다.");

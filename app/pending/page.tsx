@@ -1,6 +1,44 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-export default function PendingPage() {
+const DEFAULT_NEXT_PATH = "/account";
+
+function safeNextPath(value: string | null | undefined) {
+  const nextPath = value?.trim();
+
+  if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//") || nextPath.includes("://")) {
+    return DEFAULT_NEXT_PATH;
+  }
+
+  return nextPath;
+}
+
+export default async function PendingPage({
+  searchParams,
+}: {
+  searchParams?: { next?: string | string[] };
+}) {
+  const nextValue = Array.isArray(searchParams?.next) ? searchParams?.next[0] : searchParams?.next;
+  const nextPath = safeNextPath(nextValue);
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+
+  if (!user) {
+    redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, is_approved")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profile?.is_approved || profile?.role === "admin") {
+    redirect("/account");
+  }
+
   return (
     <main className="auth-shell">
       <section className="auth-card">
@@ -10,7 +48,7 @@ export default function PendingPage() {
           이메일 인증은 끝났지만 아직 서비스 승인 전입니다. 승인되면 회의실
           예약 화면으로 이동할 수 있습니다.
         </p>
-        <Link className="primary-link" href="/login">
+        <Link className="primary-link" href={`/login?next=${encodeURIComponent(nextPath)}`}>
           로그인으로 돌아가기
         </Link>
       </section>

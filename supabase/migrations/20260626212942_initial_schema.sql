@@ -15,6 +15,8 @@ create or replace function public.is_admin_user()
 returns boolean
 language sql
 stable
+security definer
+set search_path = public
 as $$
   select exists (
     select 1
@@ -28,6 +30,8 @@ create or replace function public.is_approved_user()
 returns boolean
 language sql
 stable
+security definer
+set search_path = public
 as $$
   select exists (
     select 1
@@ -50,6 +54,7 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+drop trigger if exists touch_profiles_updated_at on public.profiles;
 create trigger touch_profiles_updated_at
 before update on public.profiles
 for each row
@@ -89,6 +94,7 @@ create table if not exists public.rooms (
   updated_at timestamptz not null default now()
 );
 
+drop trigger if exists touch_rooms_updated_at on public.rooms;
 create trigger touch_rooms_updated_at
 before update on public.rooms
 for each row
@@ -106,6 +112,7 @@ insert into public.booking_settings (id, weekly_booking_limit_minutes)
 values (1, 180)
 on conflict (id) do nothing;
 
+drop trigger if exists touch_booking_settings_updated_at on public.booking_settings;
 create trigger touch_booking_settings_updated_at
 before update on public.booking_settings
 for each row
@@ -124,6 +131,7 @@ create table if not exists public.bookings (
   constraint bookings_time_order check (end_at > start_at)
 );
 
+drop trigger if exists touch_bookings_updated_at on public.bookings;
 create trigger touch_bookings_updated_at
 before update on public.bookings
 for each row
@@ -133,15 +141,28 @@ create unique index if not exists bookings_room_start_unique
   on public.bookings (room_id, start_at);
 
 alter table public.bookings
+  drop constraint if exists bookings_no_overlap;
+
+alter table public.bookings
   add constraint bookings_no_overlap
   exclude using gist (
     room_id with =,
     tstzrange(start_at, end_at, '[)') with &&
   );
 
+create index if not exists rooms_active_name_idx
+  on public.rooms (is_active, name);
+
+create index if not exists bookings_user_start_at_idx
+  on public.bookings (user_id, start_at desc);
+
+create index if not exists bookings_start_at_idx
+  on public.bookings (start_at);
+
 create or replace function public.validate_booking_rules()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 declare
   local_start timestamp;

@@ -4,21 +4,22 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function AccountPage() {
   const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
 
-  if (!claimsData?.claims?.sub) {
-    redirect("/login");
+  if (!user) {
+    redirect("/login?next=%2Faccount");
   }
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name, avatar_url, role, is_approved")
-    .eq("id", claimsData.claims.sub)
+    .eq("id", user.id)
     .maybeSingle();
 
   if (!profile?.is_approved && profile?.role !== "admin") {
-    redirect("/pending");
+    redirect("/pending?next=%2Faccount");
   }
 
-  return <AccountForm claims={claimsData.claims} initialProfile={profile ?? null} />;
+  return <AccountForm user={user} initialProfile={profile ?? null} />;
 }
