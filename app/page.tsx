@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const highlights = [
   {
     title: "승인된 사용자만 예약",
@@ -27,12 +29,20 @@ export default function Home() {
             지금은 Vercel과 Supabase 연동을 위한 초기 개발 단계입니다. 기본
             정책을 지키는 예약 시스템으로 점차 확장해 나갑니다.
           </p>
-          <div className="hero-meta">
-            <span>Vercel 자동 배포</span>
-            <span>Supabase 연동 준비</span>
-            <span>Asia/Seoul 기준</span>
-          </div>
+        <div className="hero-meta">
+          <span>Vercel 자동 배포</span>
+          <span>Supabase 연동 준비</span>
+          <span>Asia/Seoul 기준</span>
         </div>
+        <div className="hero-actions">
+          <Link className="primary-link" href="/login">
+            로그인 시작
+          </Link>
+          <Link className="ghost-link" href="/account">
+            내 계정 보기
+          </Link>
+        </div>
+      </div>
 
         <aside className="panel">
           <div className="panel-header">
@@ -66,4 +76,3 @@ export default function Home() {
     </main>
   );
 }
-
