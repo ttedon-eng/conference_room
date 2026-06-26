@@ -53,6 +53,16 @@ export async function approveProfile(formData: FormData) {
     redirect(`${APPROVAL_PAGE}?error=approve_failed`);
   }
 
+  await supabase.from("audit_logs").insert({
+    actor_id: user.id,
+    action: "profile_approved",
+    entity_type: "profile",
+    entity_id: profileId,
+    details: {
+      approved_by: user.id,
+    },
+  });
+
   revalidatePath(APPROVAL_PAGE);
   redirect(APPROVAL_PAGE);
 }

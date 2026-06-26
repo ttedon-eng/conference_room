@@ -575,6 +575,65 @@ button[type="submit"]:hover:not(:disabled) {
   color: var(--accent);
 }
 
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.stat-card {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.76);
+  padding: 16px;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stat-card strong {
+  font-size: 1.4rem;
+  letter-spacing: -0.03em;
+}
+
+.stats-blocked-panel {
+  margin-top: 18px;
+}
+
+.admin-nav-grid {
+  margin-top: 18px;
+}
+
+.admin-nav-card {
+  min-height: 160px;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.admin-nav-card h3 {
+  margin: 0;
+}
+
+.admin-nav-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.section-head-spaced {
+  margin-top: 28px;
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -665,7 +724,8 @@ button[type="submit"]:hover:not(:disabled) {
   .hero,
   .grid,
   .dashboard-hero,
-  .dashboard-grid {
+  .dashboard-grid,
+  .stats-summary {
     grid-template-columns: 1fr;
   }
 

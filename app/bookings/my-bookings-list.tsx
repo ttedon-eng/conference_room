@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 type RoomRow = {
   id: string;
@@ -30,14 +29,13 @@ export default function MyBookingsList({
   currentUserId,
   bookings,
   rooms,
-}: {
+  }: {
   currentUserId: string;
   bookings: BookingRow[];
   rooms: RoomRow[];
 }) {
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
-  const roomLabelById = useMemo(() => new Map(rooms.map((room) => [room.id, room])), [rooms]);
+  const roomLabelById = new Map(rooms.map((room) => [room.id, room]));
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -52,14 +50,14 @@ export default function MyBookingsList({
     setMessage(null);
 
     try {
-      const { error } = await supabase
-        .from("bookings")
-        .delete()
-        .eq("id", bookingId)
-        .eq("user_id", currentUserId);
+      const response = await fetch(`/api/bookings/${bookingId}`, {
+        method: "DELETE",
+      });
 
-      if (error) {
-        throw error;
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "예약 삭제에 실패했습니다.");
       }
 
       setPendingDeleteId(null);

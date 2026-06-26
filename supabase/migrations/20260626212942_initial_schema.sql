@@ -41,6 +41,19 @@ as $$
   );
 $$;
 
+create or replace function public.is_allowed_signup_email(email_address text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select split_part(lower(coalesce(email_address, '')), '@', 2) in (
+    'samsung.com',
+    'partner.samsung.com'
+  );
+$$;
+
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null unique,
@@ -67,6 +80,10 @@ security definer
 set search_path = public
 as $$
 begin
+  if not public.is_allowed_signup_email(new.email) then
+    raise exception 'email domain is not allowed';
+  end if;
+
   insert into public.profiles (id, email, role, is_approved)
   values (new.id, new.email, 'user', false)
   on conflict (id) do update
@@ -336,3 +353,208 @@ on public.audit_logs
 for select
 to authenticated
 using (public.is_admin_user());
+
+create table if not exists public.groups (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  description text,
+  is_active boolean not null default true,
+  created_by uuid references public.profiles(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+drop trigger if exists touch_groups_updated_at on public.groups;
+create trigger touch_groups_updated_at
+before update on public.groups
+for each row
+execute function public.touch_updated_at();
+
+alter table public.profiles
+  add column if not exists group_id uuid references public.groups(id) on delete set null;
+
+create table if not exists public.group_membership_history (
+  id bigserial primary key,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  previous_group_id uuid references public.groups(id) on delete set null,
+  group_id uuid references public.groups(id) on delete set null,
+  changed_by uuid references public.profiles(id) on delete set null,
+  changed_at timestamptz not null default now()
+);
+
+create table if not exists public.email_delivery_logs (
+  id bigserial primary key,
+  notification_type text not null check (notification_type in ('booking_created', 'booking_deleted')),
+  status text not null check (status in ('success', 'failure')),
+  provider text not null,
+  booking_id uuid references public.bookings(id) on delete set null,
+  actor_id uuid references public.profiles(id) on delete set null,
+  recipient_user_id uuid references public.profiles(id) on delete set null,
+  recipient_email text not null,
+  subject text not null,
+  body text,
+  provider text not null,
+  provider_message_id text,
+  error_message text,
+  provider_response jsonb not null default '{}'::jsonb,
+  payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists groups_active_name_idx
+  on public.groups (is_active, name);
+
+create index if not exists group_membership_history_user_changed_at_idx
+  on public.group_membership_history (user_id, changed_at desc);
+
+create index if not exists email_delivery_logs_booking_created_at_idx
+  on public.email_delivery_logs (booking_id, created_at desc);
+
+create or replace function public.log_room_audit_event()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_action text;
+  current_entity uuid;
+  current_details jsonb;
+begin
+  if tg_op = 'INSERT' then
+    current_action := 'room_created';
+    current_entity := new.id;
+    current_details := jsonb_build_object(
+      'name', new.name,
+      'room_number', new.room_number,
+      'capacity', new.capacity,
+      'description', new.description,
+      'is_active', new.is_active,
+      'created_by', new.created_by
+    );
+  elsif tg_op = 'UPDATE' then
+    current_action := 'room_updated';
+    current_entity := new.id;
+    current_details := jsonb_build_object(
+      'before', jsonb_build_object(
+        'name', old.name,
+        'room_number', old.room_number,
+        'capacity', old.capacity,
+        'description', old.description,
+        'is_active', old.is_active
+      ),
+      'after', jsonb_build_object(
+        'name', new.name,
+        'room_number', new.room_number,
+        'capacity', new.capacity,
+        'description', new.description,
+        'is_active', new.is_active
+      )
+    );
+  else
+    current_action := 'room_deleted';
+    current_entity := old.id;
+    current_details := jsonb_build_object(
+      'name', old.name,
+      'room_number', old.room_number,
+      'capacity', old.capacity,
+      'description', old.description,
+      'is_active', old.is_active,
+      'created_by', old.created_by
+    );
+  end if;
+
+  insert into public.audit_logs (
+    actor_id,
+    action,
+    entity_type,
+    entity_id,
+    details
+  )
+  values (
+    auth.uid(),
+    current_action,
+    'room',
+    current_entity,
+    current_details
+  );
+
+  return coalesce(new, old);
+end;
+$$;
+
+drop trigger if exists record_room_audit_event on public.rooms;
+create trigger record_room_audit_event
+after insert or update or delete on public.rooms
+for each row
+execute function public.log_room_audit_event();
+
+create or replace function public.prevent_profile_group_self_edit()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if tg_op = 'UPDATE'
+    and new.group_id is distinct from old.group_id
+    and not public.is_admin_user() then
+    raise exception 'group assignment can only be updated by an admin';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists block_profile_group_self_edit on public.profiles;
+create trigger block_profile_group_self_edit
+before update on public.profiles
+for each row
+execute function public.prevent_profile_group_self_edit();
+
+alter table public.groups enable row level security;
+alter table public.group_membership_history enable row level security;
+alter table public.email_delivery_logs enable row level security;
+
+create policy "groups select admin only"
+on public.groups
+for select
+to authenticated
+using (public.is_admin_user());
+
+create policy "groups manage admin only"
+on public.groups
+for all
+to authenticated
+using (public.is_admin_user())
+with check (public.is_admin_user());
+
+create policy "group membership history select admin only"
+on public.group_membership_history
+for select
+to authenticated
+using (public.is_admin_user());
+
+create policy "group membership history insert admin only"
+on public.group_membership_history
+for insert
+to authenticated
+with check (public.is_admin_user());
+
+create policy "email delivery logs select admin only"
+on public.email_delivery_logs
+for select
+to authenticated
+using (public.is_admin_user());
+
+create policy "email delivery logs insert authenticated"
+on public.email_delivery_logs
+for insert
+to authenticated
+with check (true);
+
+create policy "email delivery logs insert authenticated"
+on public.email_delivery_logs
+for insert
+to authenticated
+with check (true);

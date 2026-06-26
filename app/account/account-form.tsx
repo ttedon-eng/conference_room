@@ -73,9 +73,17 @@ export default function AccountForm({
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "flex-end" }}>
           {isAdmin ? (
-            <Link className="ghost-link" href="/admin/approvals">
-              승인 관리
-            </Link>
+            <>
+              <Link className="ghost-link" href="/admin">
+                관리자 허브
+              </Link>
+              <Link className="ghost-link" href="/admin/approvals">
+                승인 관리
+              </Link>
+              <Link className="ghost-link" href="/admin/stats">
+                예약 통계
+              </Link>
+            </>
           ) : null}
           <button type="button" className="ghost-button" onClick={signOut}>
             로그아웃

@@ -2,8 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
 
 type RoomOption = {
   id: string;
@@ -23,7 +22,6 @@ export default function BookingForm({
   rooms: RoomOption[];
 }) {
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
   const [roomId, setRoomId] = useState(rooms[0]?.id ?? "");
   const [startAt, setStartAt] = useState("");
   const [endAt, setEndAt] = useState("");
@@ -44,17 +42,24 @@ export default function BookingForm({
     }
 
     try {
-      const { error } = await supabase.from("bookings").insert({
-        room_id: roomId,
-        user_id: currentUserId,
-        start_at: toIsoString(startAt),
-        end_at: toIsoString(endAt),
-        title: title || null,
-        notes: notes || null,
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          roomId,
+          startAt: toIsoString(startAt),
+          endAt: toIsoString(endAt),
+          title,
+          notes,
+        }),
       });
 
-      if (error) {
-        throw error;
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "예약 추가에 실패했습니다.");
       }
 
       setRoomId(rooms[0]?.id ?? "");
