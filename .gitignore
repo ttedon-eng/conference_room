@@ -8,3 +8,8 @@
 *.pem
 *.key
 
+# Next.js and Node build artifacts
+.next/
+node_modules/
+*.tsbuildinfo
+.vercel/
