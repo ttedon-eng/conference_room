@@ -174,16 +174,17 @@ export default async function BookingsPage({
     supabase.rpc("list_booking_groups"),
   ]);
 
+  const warnings = [] as string[];
   if (roomRowsError) {
-    throw roomRowsError;
+    warnings.push("회의실 목록을 불러오지 못했습니다.");
   }
 
   if (bookingRowsError) {
-    throw bookingRowsError;
+    warnings.push("예약 현황을 불러오지 못했습니다.");
   }
 
   if (groupRowsError) {
-    throw groupRowsError;
+    warnings.push("그룹 목록을 불러오지 못했습니다.");
   }
 
   const allBookings = ((bookingRowsData ?? []) as Omit<BookingDashboardRow, "toneKey">[]).map((booking) => ({
@@ -235,6 +236,13 @@ export default async function BookingsPage({
             서울시간 기준 월요일 00:00부터 일요일 24:00까지의 예약을 표시합니다. 그룹 색상은 색상 범례와
             표 행에 함께 반영됩니다.
           </p>
+          {warnings.length ? (
+            <div className="resource-note">
+              {warnings.map((warning) => (
+                <p key={warning}>{warning}</p>
+              ))}
+            </div>
+          ) : null}
 
           <QuickSlotPicker slots={quickSlots} />
 

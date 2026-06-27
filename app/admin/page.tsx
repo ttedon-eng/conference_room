@@ -60,6 +60,11 @@ export default async function AdminHomePage() {
       title: "인증 잠금",
       description: "실패 누적으로 잠긴 인증을 해제합니다.",
     },
+    {
+      href: "/admin/diagnostics",
+      title: "DB 진단",
+      description: "배포 DB의 핵심 스키마와 seed 정합성을 확인합니다.",
+    },
   ];
 
   return (
