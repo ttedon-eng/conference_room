@@ -4,7 +4,7 @@ export const ALLOWED_SIGNUP_DOMAINS = ["samsung.com", "partner.samsung.com"] as 
 export const SIGNUP_VERIFICATION_CODE_LENGTH = 6;
 export const SIGNUP_VERIFICATION_WINDOW_MINUTES = 10;
 export const SIGNUP_VERIFICATION_LOCK_THRESHOLD = 5;
-export const DEFAULT_NEXT_PATH = "/account";
+export const DEFAULT_NEXT_PATH = "/bookings";
 export const UNSPECIFIED_GROUP_NAME = "미지정";
 
 export function normalizeEmail(value: string) {
@@ -50,4 +50,3 @@ export function verificationCodeMatches(sessionId: string, code: string, codeHas
 export function addMinutes(baseDate: Date, minutes: number) {
   return new Date(baseDate.getTime() + minutes * 60_000);
 }
-

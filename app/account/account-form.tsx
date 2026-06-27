@@ -59,7 +59,7 @@ export default function AccountForm({
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    router.push("/login?next=%2Faccount");
+    router.push("/login?next=%2Fbookings");
     router.refresh();
   };
 

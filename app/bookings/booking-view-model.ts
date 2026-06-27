@@ -11,12 +11,12 @@ export type BookingTone = {
 
 export const BOOKING_TONES: Record<BookingToneKey, BookingTone> = {
   teal: {
-    label: "청록",
-    accent: "#0f766e",
-    border: "rgba(15, 118, 110, 0.22)",
-    soft: "rgba(15, 118, 110, 0.12)",
-    ink: "#0b4f4a",
-    background: "rgba(236, 253, 245, 0.92)",
+    label: "딥블루",
+    accent: "#1d4ed8",
+    border: "rgba(29, 78, 216, 0.22)",
+    soft: "rgba(29, 78, 216, 0.12)",
+    ink: "#1e3a8a",
+    background: "rgba(239, 246, 255, 0.92)",
   },
   blue: {
     label: "파랑",

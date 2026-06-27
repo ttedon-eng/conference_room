@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { normalizeNextPath, UNSPECIFIED_GROUP_NAME } from "@/lib/auth/onboarding";
 import { requestSignupVerification } from "./actions";
 
-const DEFAULT_NEXT_PATH = "/account";
+const DEFAULT_NEXT_PATH = "/bookings";
 
 function resolveErrorMessage(errorValue: string | null | undefined) {
   switch (errorValue) {
@@ -75,7 +75,7 @@ export default async function SignupPage({
         </form>
 
         <div className="auth-actions">
-          <Link className="link-button" href={`/login?next=${encodeURIComponent(nextPath)}`}>
+          <Link className="ghost-link link-button" href={`/login?next=${encodeURIComponent(nextPath)}`}>
             로그인으로 돌아가기
           </Link>
         </div>

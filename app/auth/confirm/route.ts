@@ -2,7 +2,7 @@ import { type EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse, type NextRequest } from "next/server";
 
-const DEFAULT_NEXT_PATH = "/account";
+const DEFAULT_NEXT_PATH = "/bookings";
 
 function safeNextPath(value: string | null) {
   const nextPath = value?.trim();

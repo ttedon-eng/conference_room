@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-const DEFAULT_NEXT_PATH = "/account";
+const DEFAULT_NEXT_PATH = "/bookings";
 
 function safeNextPath(value: string | null | undefined) {
   const nextPath = value?.trim();
@@ -36,7 +36,7 @@ export default async function PendingPage({
     .maybeSingle();
 
   if (profile?.is_approved || profile?.role === "admin") {
-    redirect("/account");
+    redirect(nextPath);
   }
 
   return (

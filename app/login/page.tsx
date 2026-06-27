@@ -109,7 +109,7 @@ export default function LoginPage({
         </form>
 
         <div className="auth-actions">
-          <Link className="link-button" href={`/signup?next=${encodeURIComponent(nextPath)}`}>
+          <Link className="ghost-link link-button" href={`/signup?next=${encodeURIComponent(nextPath)}`}>
             회원가입 시작
           </Link>
         </div>

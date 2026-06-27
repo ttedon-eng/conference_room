@@ -4,7 +4,7 @@ import { createServiceClient } from "@/lib/supabase/admin";
 import { normalizeNextPath } from "@/lib/auth/onboarding";
 import { requestSignupVerification, verifySignupCode } from "../actions";
 
-const DEFAULT_NEXT_PATH = "/account";
+const DEFAULT_NEXT_PATH = "/bookings";
 
 function resolveErrorMessage(errorValue: string | null | undefined) {
   switch (errorValue) {
@@ -80,11 +80,11 @@ export default async function SignupVerifyPage({
           <form action={requestSignupVerification}>
             <input type="hidden" name="email" value={verification.email} />
             <input type="hidden" name="next" value={nextPath} />
-            <button type="submit" className="link-button" disabled={isLocked}>
+            <button type="submit" className="ghost-link link-button" disabled={isLocked}>
               인증번호 재발송
             </button>
           </form>
-          <Link className="link-button" href="/signup">
+          <Link className="ghost-link link-button" href="/signup">
             처음으로
           </Link>
         </div>

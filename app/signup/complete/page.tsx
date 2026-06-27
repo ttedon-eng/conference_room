@@ -3,7 +3,7 @@ import { createServiceClient } from "@/lib/supabase/admin";
 import { completeSignup } from "../actions";
 import { normalizeNextPath, UNSPECIFIED_GROUP_NAME } from "@/lib/auth/onboarding";
 
-const DEFAULT_NEXT_PATH = "/account";
+const DEFAULT_NEXT_PATH = "/bookings";
 
 function resolveErrorMessage(errorValue: string | null | undefined) {
   switch (errorValue) {
