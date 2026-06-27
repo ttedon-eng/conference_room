@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect } from "react";
 import StateScreen from "@/components/state-screen";
 
@@ -29,9 +28,6 @@ export default function Error({
         <button className="primary-link state-button" type="button" onClick={reset}>
           다시 시도
         </button>
-        <Link className="ghost-link" href="/admin">
-          관리자 허브
-        </Link>
       </div>
     </StateScreen>
   );
