@@ -48,17 +48,17 @@ export default async function AdminHomePage() {
     {
       href: "/admin/audit",
       title: "감사 로그",
-      description: "승인, 회의실, 그룹, 예약, 정책 변경 이력을 확인합니다.",
+      description: "승인, 회의실, 그룹, 예약 변경 이력을 확인합니다.",
     },
     {
       href: "/admin/policy",
-      title: "주간 예약 정책",
-      description: "주간 예약 제한 시간을 코드 수정 없이 조정합니다.",
+      title: "주간 예약 한도",
+      description: "주간 예약 제한 시간을 조정합니다.",
     },
     {
       href: "/admin/verification-locks",
       title: "인증 잠금",
-      description: "실패 누적으로 잠긴 이메일 인증을 해제합니다.",
+      description: "실패 누적으로 잠긴 인증을 해제합니다.",
     },
   ];
 
@@ -66,7 +66,7 @@ export default async function AdminHomePage() {
     <DashboardShell
       eyebrow="관리자"
       title="관리자 허브"
-      description="운영자가 자주 쓰는 승인, 그룹, 통계, 정책 화면을 한곳에 모았습니다."
+      description="승인, 그룹, 통계, 설정 화면을 한곳에 모았습니다."
     >
       <section className="dashboard-grid">
         <article className="resource-panel resource-panel-wide">

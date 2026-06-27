@@ -10,7 +10,7 @@ const DEFAULT_NEXT_PATH = "/bookings";
 function resolveErrorMessage(errorValue: string | null | undefined) {
   switch (errorValue) {
     case "invalid_email":
-      return "허용된 회사 이메일만 사용할 수 있습니다.";
+      return "회사 이메일만 사용할 수 있습니다.";
     case "locked":
       return "이 이메일은 인증이 잠겨 있습니다. 관리자 해제가 필요합니다.";
     case "rejected":
@@ -60,8 +60,7 @@ export default async function SignupPage({
         <p className="eyebrow">회원가입</p>
         <h1>이메일로 가입을 시작합니다.</h1>
         <p className="auth-copy">
-          허용된 회사 이메일로 인증번호를 발송합니다. 인증 후 이름, 비밀번호, 그룹을 입력하면
-          가입이 완료됩니다.
+          회사 이메일로 인증번호를 보낸 뒤 이름, 비밀번호, 그룹을 입력하면 가입이 완료됩니다.
         </p>
 
         <form action={requestSignupVerification} className="auth-form">

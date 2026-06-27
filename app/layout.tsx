@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "A동 19층 예약시스템",
-  description: "회의실 예약 및 운영 시스템",
+  description: "회의실 예약 서비스",
 };
 
 export default function RootLayout({

@@ -71,7 +71,7 @@ export default function LoginPage({
       <section className="auth-card">
         <p className="eyebrow">로그인</p>
         <h1>회의실 예약 로그인</h1>
-        <p className="auth-copy">이메일 인증과 관리자 승인을 마친 계정만 사용할 수 있습니다.</p>
+        <p className="auth-copy">승인된 계정만 로그인할 수 있습니다.</p>
 
         {notice ? (
           <p className="auth-message" role="status" aria-live="polite">

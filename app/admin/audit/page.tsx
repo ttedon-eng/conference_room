@@ -59,7 +59,7 @@ function getActionLabel(action: string) {
     case "booking_series_updated":
       return "정기 예약 수정";
     case "booking_policy_updated":
-      return "예약 정책 변경";
+      return "예약 한도 변경";
     case "signup_verification_unlocked":
       return "인증 잠금 해제";
     default:
@@ -174,16 +174,16 @@ export default async function AdminAuditPage() {
     <DashboardShell
       eyebrow="Audit"
       title="감사 로그 뷰어"
-      description="승인, 그룹, 회의실, 정책, 예약 삭제 같은 운영 작업을 최근 50건 기준으로 확인합니다."
+      description="승인, 그룹, 회의실, 예약 변경 내역을 최근 50건 기준으로 확인합니다."
     >
       <section className="dashboard-grid">
         <article className="resource-panel resource-panel-wide">
           <div className="section-head">
             <p className="eyebrow">Recent Events</p>
-            <h2>최근 운영 이력</h2>
+            <h2>최근 변경 내역</h2>
           </div>
           <p className="resource-note">
-            감사 로그는 관리자 작업 흐름을 추적하기 위한 읽기 전용 화면입니다. 상세 데이터는 핵심 항목만
+            감사 로그는 관리자 변경 흐름을 확인하는 조회 전용 화면입니다. 상세 데이터는 핵심 항목만
             보여줍니다.
           </p>
 
@@ -252,7 +252,7 @@ export default async function AdminAuditPage() {
               <div className="resource-item-top">
                 <div>
                   <h3>회의실 / 그룹 변경</h3>
-                  <p className="resource-subtitle">운영 데이터 수정 이력을 남깁니다.</p>
+                  <p className="resource-subtitle">중요 변경 이력을 남깁니다.</p>
                 </div>
                 <span className="status-pill is-active">admin</span>
               </div>
@@ -260,7 +260,7 @@ export default async function AdminAuditPage() {
             <article className="resource-item">
               <div className="resource-item-top">
                 <div>
-                  <h3>예약 삭제 / 정책 변경</h3>
+                  <h3>예약 삭제 / 한도 변경</h3>
                   <p className="resource-subtitle">삭제와 주간 제한 변경도 함께 보관합니다.</p>
                 </div>
                 <span className="status-pill is-active">audit</span>
