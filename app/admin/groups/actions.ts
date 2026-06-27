@@ -142,9 +142,19 @@ export async function deleteGroup(formData: FormData) {
 
   const { supabase, userId } = await requireAdmin();
 
-  const { data: group } = await supabase.from("groups").select("id, name").eq("id", groupId).maybeSingle();
+  const { data: group } = await supabase
+    .from("groups")
+    .select("id, name, is_active")
+    .eq("id", groupId)
+    .maybeSingle();
 
-  const { error } = await supabase.from("groups").delete().eq("id", groupId);
+  const { error } = await supabase
+    .from("groups")
+    .update({
+      is_active: false,
+    })
+    .eq("id", groupId)
+    .eq("is_active", true);
 
   if (error) {
     redirect(`${GROUPS_PAGE}?error=delete_failed`);
@@ -152,10 +162,14 @@ export async function deleteGroup(formData: FormData) {
 
   await writeAuditLog(supabase, {
     actorId: userId,
-    action: "group_deleted",
+    action: "group_deactivated",
     entityType: "group",
     entityId: groupId,
-    details: { name: group?.name ?? null },
+    details: {
+      name: group?.name ?? null,
+      was_active: group?.is_active ?? null,
+      is_active: false,
+    },
   });
 
   revalidatePath(GROUPS_PAGE);

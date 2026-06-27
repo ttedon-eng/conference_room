@@ -155,7 +155,7 @@ export default async function AdminGroupsPage({
                   <form action={deleteGroup} className="stack-form">
                     <input type="hidden" name="group_id" value={group.id} />
                     <button type="submit" className="danger-button">
-                      삭제
+                      미사용 처리
                     </button>
                   </form>
                 </article>

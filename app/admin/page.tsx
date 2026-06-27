@@ -55,6 +55,11 @@ export default async function AdminHomePage() {
       title: "주간 예약 정책",
       description: "주간 예약 제한 시간을 코드 수정 없이 조정합니다.",
     },
+    {
+      href: "/admin/verification-locks",
+      title: "인증 잠금",
+      description: "실패 누적으로 잠긴 이메일 인증을 해제합니다.",
+    },
   ];
 
   return (
