@@ -39,7 +39,6 @@ export default function AccountForm({
     try {
       const { error } = await supabase.from("profiles").upsert({
         id: user.id,
-        email: user.email ?? null,
         full_name: fullName,
         avatar_url: avatarUrl,
         updated_at: new Date().toISOString(),

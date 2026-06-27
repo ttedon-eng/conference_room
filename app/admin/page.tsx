@@ -41,6 +41,11 @@ export default async function AdminHomePage() {
       description: "회의실, 사용자, 그룹 기준의 예약 흐름을 확인합니다.",
     },
     {
+      href: "/admin/audit",
+      title: "감사 로그",
+      description: "승인, 회의실, 그룹, 예약, 정책 변경 이력을 확인합니다.",
+    },
+    {
       href: "/admin/policy",
       title: "주간 예약 정책",
       description: "주간 예약 제한 시간을 코드 수정 없이 조정합니다.",

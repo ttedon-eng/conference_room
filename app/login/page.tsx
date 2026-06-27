@@ -1,48 +1,27 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-
-type Mode = "login" | "signup";
-
-const DEFAULT_NEXT_PATH = "/account";
-const ALLOWED_SIGNUP_DOMAINS = ["samsung.com", "partner.samsung.com"] as const;
-
-function getEmailDomain(value: string) {
-  const parts = value.trim().toLowerCase().split("@");
-  return parts[parts.length - 1] ?? "";
-}
-
-function canSignUpWithEmail(value: string) {
-  return ALLOWED_SIGNUP_DOMAINS.includes(getEmailDomain(value) as (typeof ALLOWED_SIGNUP_DOMAINS)[number]);
-}
-
-function safeNextPath(value: string | null) {
-  const nextPath = value?.trim();
-
-  if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//") || nextPath.includes("://")) {
-    return DEFAULT_NEXT_PATH;
-  }
-
-  return nextPath;
-}
+import { normalizeNextPath } from "@/lib/auth/onboarding";
 
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams?: { next?: string | string[] };
+  searchParams?: { next?: string | string[]; message?: string | string[] };
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const nextValue = Array.isArray(searchParams?.next) ? searchParams?.next[0] : searchParams?.next;
-  const nextPath = safeNextPath(nextValue ?? null);
+  const nextPath = normalizeNextPath(nextValue ?? null);
+  const noticeValue = Array.isArray(searchParams?.message) ? searchParams?.message[0] : searchParams?.message;
+  const notice = noticeValue === "signup_complete" ? "가입이 완료되었습니다. 로그인해 주세요." : null;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -50,30 +29,6 @@ export default function LoginPage({
     setMessage(null);
 
     try {
-      if (mode === "signup") {
-        if (!canSignUpWithEmail(email)) {
-          setMessage(
-            `가입은 ${ALLOWED_SIGNUP_DOMAINS.join(", ")} 이메일만 가능합니다.`,
-          );
-          return;
-        }
-
-        const { error } = await supabase.auth.signUp({
-          email: email.trim().toLowerCase(),
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(nextPath)}`,
-          },
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        setMessage("가입 메일을 보냈습니다. 메일 인증 후 로그인해 주세요.");
-        return;
-      }
-
       const normalizedEmail = email.trim().toLowerCase();
       const { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
@@ -114,11 +69,10 @@ export default function LoginPage({
     <main className="auth-shell">
       <section className="auth-card">
         <p className="eyebrow">Supabase Auth</p>
-        <h1>{mode === "login" ? "로그인" : "회원가입"}</h1>
-        <p className="auth-copy">
-          삼성 계열 도메인용 회의실 예약 MVP입니다. 이메일 인증과 승인 절차를
-          순서대로 붙여 나갑니다.
-        </p>
+        <h1>로그인</h1>
+        <p className="auth-copy">이메일 인증과 관리자 승인을 마친 계정만 들어올 수 있습니다.</p>
+
+        {notice ? <p className="auth-message">{notice}</p> : null}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
@@ -145,18 +99,14 @@ export default function LoginPage({
           </label>
 
           <button type="submit" disabled={loading}>
-            {loading ? "처리 중..." : mode === "login" ? "로그인" : "회원가입"}
+            {loading ? "처리 중..." : "로그인"}
           </button>
         </form>
 
         <div className="auth-actions">
-          <button
-            type="button"
-            className="link-button"
-            onClick={() => setMode((current) => (current === "login" ? "signup" : "login"))}
-          >
-            {mode === "login" ? "회원가입으로 전환" : "로그인으로 전환"}
-          </button>
+          <Link className="link-button" href={`/signup?next=${encodeURIComponent(nextPath)}`}>
+            회원가입
+          </Link>
         </div>
 
         {message ? <p className="auth-message">{message}</p> : null}

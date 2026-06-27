@@ -43,7 +43,7 @@ type AuditLogRow = {
 type EmailLogRow = {
   id: number;
   booking_id: string | null;
-  notification_type: "booking_created" | "booking_deleted";
+  notification_type: "booking_created" | "booking_deleted" | "profile_rejected";
   recipient_email: string;
   subject: string;
   status: "success" | "failure";
@@ -101,6 +101,17 @@ function getSeoulWeekBounds(referenceDate = new Date()) {
 
 function getBookingDurationMinutes(booking: BookingRow) {
   return Math.round((new Date(booking.end_at).getTime() - new Date(booking.start_at).getTime()) / 60000);
+}
+
+function getEmailNotificationLabel(notificationType: EmailLogRow["notification_type"]) {
+  switch (notificationType) {
+    case "booking_created":
+      return "예약 생성";
+    case "booking_deleted":
+      return "예약 삭제";
+    case "profile_rejected":
+      return "승인 거부";
+  }
 }
 
 export default async function AdminStatsPage() {
@@ -462,7 +473,7 @@ export default async function AdminStatsPage() {
                 </div>
 
                 <div className="resource-meta">
-                  <span>{log.notification_type === "booking_created" ? "예약 생성" : "예약 삭제"}</span>
+                  <span>{getEmailNotificationLabel(log.notification_type)}</span>
                   <span>{new Date(log.created_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</span>
                 </div>
 

@@ -1,8 +1,8 @@
 import { createServiceClient } from "@/lib/supabase/admin";
 
 type EmailDeliveryInput = {
-  bookingId: string;
-  notificationType: "booking_created" | "booking_deleted";
+  bookingId?: string | null;
+  notificationType: "booking_created" | "booking_deleted" | "profile_rejected";
   actorId: string;
   recipientUserId: string;
   recipientEmail: string;
@@ -76,7 +76,7 @@ export async function recordEmailDelivery(
     p_notification_type: payload.notificationType,
     p_status: payload.status,
     p_provider: payload.providerName ?? "resend",
-    p_booking_id: payload.bookingId,
+    p_booking_id: payload.bookingId ?? null,
     p_actor_id: payload.actorId,
     p_recipient_user_id: payload.recipientUserId,
     p_recipient_email: payload.recipientEmail,
@@ -104,7 +104,7 @@ export async function recordEmailDelivery(
     notification_type: payload.notificationType,
     status: payload.status,
     provider: payload.providerName ?? "resend",
-    booking_id: payload.bookingId,
+    booking_id: payload.bookingId ?? null,
     actor_id: payload.actorId,
     recipient_user_id: payload.recipientUserId,
     recipient_email: payload.recipientEmail,

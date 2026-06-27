@@ -2,22 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-type RoomRow = {
-  id: string;
-  name: string;
-  room_number: string;
-};
-
-type BookingRow = {
-  id: string;
-  user_id: string;
-  room_id: string;
-  start_at: string;
-  end_at: string;
-  title: string | null;
-  notes: string | null;
-};
+import type { CSSProperties } from "react";
+import { BOOKING_TONES, type BookingDashboardRow } from "./booking-view-model";
 
 const dateTimeFormatter = new Intl.DateTimeFormat("ko-KR", {
   dateStyle: "medium",
@@ -25,17 +11,14 @@ const dateTimeFormatter = new Intl.DateTimeFormat("ko-KR", {
   timeZone: "Asia/Seoul",
 });
 
+type BookingListRow = BookingDashboardRow;
+
 export default function MyBookingsList({
-  currentUserId,
   bookings,
-  rooms,
-  }: {
-  currentUserId: string;
-  bookings: BookingRow[];
-  rooms: RoomRow[];
+}: {
+  bookings: BookingListRow[];
 }) {
   const router = useRouter();
-  const roomLabelById = new Map(rooms.map((room) => [room.id, room]));
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -77,26 +60,42 @@ export default function MyBookingsList({
   return (
     <div className="resource-list">
       {bookings.map((booking) => {
-        const room = roomLabelById.get(booking.room_id);
+        const tone = BOOKING_TONES[booking.toneKey];
         const isPendingDelete = pendingDeleteId === booking.id;
         const isDeleting = deletingId === booking.id;
 
         return (
-          <article className="resource-item" key={booking.id}>
+          <article
+            className="resource-item booking-accented"
+            key={booking.id}
+            style={
+              {
+                "--booking-accent": tone.accent,
+                "--booking-border": tone.border,
+                "--booking-soft": tone.soft,
+                "--booking-ink": tone.ink,
+                "--booking-bg": tone.background,
+              } as CSSProperties
+            }
+          >
             <div className="resource-item-top">
               <div>
                 <h3>{booking.title || "제목 없음"}</h3>
                 <p className="resource-subtitle">
-                  {room ? `${room.name} · Room ${room.room_number}` : "회의실 정보 없음"}
+                  {booking.room_name} · Room {booking.room_number}
                 </p>
               </div>
-              <span className="status-pill is-owner">내 예약</span>
+              <span className="status-pill is-owner">{booking.group_name || "그룹 없음"}</span>
             </div>
 
             <div className="resource-meta">
               <span>{dateTimeFormatter.format(new Date(booking.start_at))}</span>
               <span>{dateTimeFormatter.format(new Date(booking.end_at))}</span>
             </div>
+
+            <p className="resource-copy">
+              예약자 {booking.user_name} · {booking.user_email}
+            </p>
 
             {booking.notes ? <p className="resource-copy">{booking.notes}</p> : null}
 
