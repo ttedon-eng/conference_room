@@ -91,3 +91,61 @@ export async function cancelRecurringSeries(formData: FormData) {
   revalidatePath(RECURRING_PAGE);
   redirect(RECURRING_PAGE);
 }
+
+export async function updateRecurringSeries(formData: FormData) {
+  const seriesId = readValue(formData, "series_id");
+  const title = readValue(formData, "title");
+  const notes = readValue(formData, "notes");
+  const repeatCountRaw = readValue(formData, "repeat_count");
+  const repeatCount = repeatCountRaw ? Number(repeatCountRaw) : null;
+
+  if (!seriesId) {
+    redirect(`${RECURRING_PAGE}?error=invalid`);
+  }
+
+  if (repeatCount !== null && (!Number.isInteger(repeatCount) || repeatCount < 1 || repeatCount > 12)) {
+    redirect(`${RECURRING_PAGE}?error=invalid`);
+  }
+
+  const { supabase, userId } = await requireAdmin();
+
+  const { data: updatedSeriesData, error } = await supabase
+    .rpc("update_booking_series", {
+      p_series_id: seriesId,
+      p_title: title || null,
+      p_notes: notes || null,
+      p_repeat_count: repeatCount,
+    })
+    .maybeSingle();
+
+  const updatedSeries = updatedSeriesData as
+    | {
+        title: string | null;
+        notes: string | null;
+        repeat_count: number;
+        starts_at: string;
+        ends_at: string;
+      }
+    | null;
+
+  if (error || !updatedSeries) {
+    redirect(`${RECURRING_PAGE}?error=update_failed`);
+  }
+
+  await writeAuditLog(supabase, {
+    actorId: userId,
+    action: "booking_series_updated",
+    entityType: "booking_series",
+    entityId: seriesId,
+    details: {
+      title: updatedSeries.title,
+      notes: updatedSeries.notes,
+      repeat_count: updatedSeries.repeat_count,
+      starts_at: updatedSeries.starts_at,
+      ends_at: updatedSeries.ends_at,
+    },
+  });
+
+  revalidatePath(RECURRING_PAGE);
+  redirect(RECURRING_PAGE);
+}

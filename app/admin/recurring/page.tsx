@@ -2,7 +2,8 @@ import DashboardShell from "@/components/dashboard-shell";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import BookingForm from "@/app/bookings/booking-form";
-import { cancelRecurringSeries } from "./actions";
+import RecurringOccurrenceList from "./occurrence-list";
+import { cancelRecurringSeries, updateRecurringSeries } from "./actions";
 
 const RECURRING_PAGE = "/admin/recurring";
 
@@ -80,17 +81,46 @@ export default async function AdminRecurringPage({
     created_at: string;
     updated_at: string;
   }>;
+  type OccurrenceRow = {
+    id: string;
+    series_id: string | null;
+    occurrence_index: number;
+    start_at: string;
+    end_at: string;
+    title: string | null;
+  };
+
+  const seriesIds = seriesItems.map((series) => series.id);
+  const { data: occurrenceData, error: occurrenceError } = seriesIds.length
+    ? await supabase
+        .from("bookings")
+        .select("id, series_id, occurrence_index, start_at, end_at, title")
+        .in("series_id", seriesIds)
+        .order("start_at", { ascending: true })
+    : { data: [] as OccurrenceRow[], error: null };
+
+  if (occurrenceError) {
+    throw occurrenceError;
+  }
+
+  const occurrencesBySeries = new Map<string, OccurrenceRow[]>();
+  for (const occurrence of (occurrenceData ?? []) as OccurrenceRow[]) {
+    const key = occurrence.series_id ?? "";
+    const current = occurrencesBySeries.get(key) ?? [];
+    current.push(occurrence);
+    occurrencesBySeries.set(key, current);
+  }
 
   return (
     <DashboardShell
-      eyebrow="Recurring"
+      eyebrow="정기 예약"
       title="정기 예약 관리"
       description="주간 반복 예약을 생성하고, 활성 시리즈를 확인하고, 시리즈 단위로 취소할 수 있습니다."
     >
       <section className="dashboard-grid">
         <article className="resource-panel resource-panel-wide">
           <div className="section-head">
-            <p className="eyebrow">Create</p>
+            <p className="eyebrow">생성</p>
             <h2>정기 예약 생성</h2>
           </div>
           <p className="resource-note">
@@ -102,7 +132,7 @@ export default async function AdminRecurringPage({
 
         <aside className="resource-panel">
           <div className="section-head">
-            <p className="eyebrow">Series</p>
+            <p className="eyebrow">시리즈</p>
             <h2>활성 시리즈</h2>
           </div>
 
@@ -135,6 +165,40 @@ export default async function AdminRecurringPage({
                     <span>총 {series.repeat_count}회</span>
                     <span>남은 예약 {series.upcoming_booking_count}건</span>
                   </div>
+
+                  <form action={updateRecurringSeries} className="stack-form">
+                    <input type="hidden" name="series_id" value={series.id} />
+                    <label>
+                      <span>제목</span>
+                      <input name="title" defaultValue={series.title ?? ""} placeholder="주간 스탠드업" />
+                    </label>
+                    <label>
+                      <span>메모</span>
+                      <textarea name="notes" rows={3} defaultValue={series.notes ?? ""} />
+                    </label>
+                    <label>
+                      <span>정기 횟수</span>
+                      <input
+                        name="repeat_count"
+                        type="number"
+                        min={1}
+                        max={12}
+                        step={1}
+                        defaultValue={series.repeat_count}
+                      />
+                    </label>
+                    <button type="submit">시리즈 저장</button>
+                  </form>
+
+                  <div className="section-head section-head-spaced">
+                    <p className="eyebrow">회차</p>
+                    <h2>회차 목록</h2>
+                  </div>
+
+                  <RecurringOccurrenceList
+                    seriesId={series.id}
+                    occurrences={occurrencesBySeries.get(series.id) ?? []}
+                  />
 
                   <form action={cancelRecurringSeries} className="stack-form">
                     <input type="hidden" name="series_id" value={series.id} />

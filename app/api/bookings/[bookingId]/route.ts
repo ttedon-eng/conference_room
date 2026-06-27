@@ -46,7 +46,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ booking
 
   const { data: booking, error: bookingError } = await supabase
     .from("bookings")
-    .select("id, user_id, room_id, start_at, end_at, title, notes")
+    .select("id, user_id, room_id, start_at, end_at, title, notes, series_id, occurrence_index")
     .eq("id", bookingId)
     .maybeSingle();
 
@@ -74,6 +74,23 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ booking
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+
+  if (booking.series_id) {
+    const { error: exceptionError } = await supabase.from("booking_series_occurrence_exceptions").insert({
+      series_id: booking.series_id,
+      booking_id: booking.id,
+      occurrence_index: booking.occurrence_index,
+      start_at: booking.start_at,
+      end_at: booking.end_at,
+      exception_type: "cancelled",
+      reason: "single_occurrence_cancelled",
+      cancelled_by: user.id,
+    });
+
+    if (exceptionError) {
+      console.error("Failed to record recurring booking exception", exceptionError);
+    }
   }
 
   const recipientEmail = recipientProfile?.email || profile?.email || user.email || "";
