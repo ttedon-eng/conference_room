@@ -82,7 +82,7 @@ export default async function AdminGroupsPage({
       <section className="dashboard-grid">
         <article className="resource-panel resource-panel-wide">
           <div className="section-head">
-            <p className="eyebrow">Create</p>
+            <p className="eyebrow">생성</p>
             <h2>그룹 추가</h2>
           </div>
 

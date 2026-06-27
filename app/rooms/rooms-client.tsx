@@ -105,7 +105,7 @@ export default function RoomsClient({
 
       <aside className="resource-panel">
         <div className="section-head">
-          <p className="eyebrow">{editingRoom ? "Edit" : "Create"}</p>
+          <p className="eyebrow">{editingRoom ? "수정" : "생성"}</p>
           <h2>{editingRoom ? "회의실 수정" : "회의실 추가"}</h2>
         </div>
         <p className="resource-note">

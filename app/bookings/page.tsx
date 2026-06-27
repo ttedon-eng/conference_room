@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { createClient } from "@/lib/supabase/server";
 import BookingForm from "./booking-form";
 import MyBookingsList from "./my-bookings-list";
+import QuickSlotPicker from "./quick-slot-picker";
 import {
   BOOKING_TONES,
   getBookingToneKey,
@@ -24,6 +25,63 @@ const dateTimeFormatter = new Intl.DateTimeFormat("ko-KR", {
   timeStyle: "short",
   timeZone: "Asia/Seoul",
 });
+
+function formatSeoulDateTimeLocal(date: Date) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const parts = formatter.formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value ?? "1970";
+  const month = parts.find((part) => part.type === "month")?.value ?? "01";
+  const day = parts.find((part) => part.type === "day")?.value ?? "01";
+  const hour = parts.find((part) => part.type === "hour")?.value ?? "00";
+  const minute = parts.find((part) => part.type === "minute")?.value ?? "00";
+
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+}
+
+function addMinutes(date: Date, minutes: number) {
+  return new Date(date.getTime() + minutes * 60_000);
+}
+
+function createQuickSlots(referenceWeekStart: Date, roomId: string) {
+  const dayOffsets = [0, 1, 2, 3, 4];
+  const hours = [9, 11, 14, 16];
+  const slots: Array<{ label: string; roomId: string; startAt: string; endAt: string }> = [];
+  const dayFormatter = new Intl.DateTimeFormat("ko-KR", {
+    weekday: "short",
+    timeZone: "Asia/Seoul",
+  });
+  const timeFormatter = new Intl.DateTimeFormat("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Seoul",
+  });
+
+  for (const dayOffset of dayOffsets) {
+    for (const hour of hours) {
+      const start = addMinutes(referenceWeekStart, 9 * 60 + dayOffset * 24 * 60 + hour * 60);
+      const end = addMinutes(start, 30);
+
+      slots.push({
+        label: `${dayFormatter.format(start)} ${timeFormatter.format(start)} - ${timeFormatter.format(end)}`,
+        roomId,
+        startAt: formatSeoulDateTimeLocal(start),
+        endAt: formatSeoulDateTimeLocal(end),
+      });
+    }
+  }
+
+  return slots;
+}
 
 function getSeoulWeekBounds(referenceDate = new Date()) {
   const seoulNow = new Date(referenceDate.getTime() + 9 * 60 * 60 * 1000);
@@ -70,7 +128,18 @@ function getBookingDurationMinutes(booking: BookingDashboardRow) {
   return Math.round((new Date(booking.end_at).getTime() - new Date(booking.start_at).getTime()) / 60000);
 }
 
-export default async function BookingsPage() {
+export default async function BookingsPage({
+  searchParams,
+}: {
+  searchParams?: {
+    roomId?: string | string[];
+    startAt?: string | string[];
+    endAt?: string | string[];
+    title?: string | string[];
+    notes?: string | string[];
+    repeatCount?: string | string[];
+  };
+}) {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
@@ -135,23 +204,35 @@ export default async function BookingsPage() {
     (total, booking) => total + getBookingDurationMinutes(booking),
     0,
   );
+  const roomIdValue = Array.isArray(searchParams?.roomId) ? searchParams?.roomId[0] : searchParams?.roomId;
+  const startAtValue = Array.isArray(searchParams?.startAt) ? searchParams?.startAt[0] : searchParams?.startAt;
+  const endAtValue = Array.isArray(searchParams?.endAt) ? searchParams?.endAt[0] : searchParams?.endAt;
+  const titleValue = Array.isArray(searchParams?.title) ? searchParams?.title[0] : searchParams?.title;
+  const notesValue = Array.isArray(searchParams?.notes) ? searchParams?.notes[0] : searchParams?.notes;
+  const repeatCountValue = Array.isArray(searchParams?.repeatCount)
+    ? searchParams?.repeatCount[0]
+    : searchParams?.repeatCount;
+
+  const quickSlots = roomItems.length ? createQuickSlots(weekStart, roomItems[0].id) : [];
 
   return (
     <DashboardShell
-      eyebrow="Bookings"
+      eyebrow="예약"
       title="예약 관리"
       description="이번 주 예약 테이블과 내 예약을 함께 확인하면서, 회의실과 그룹 흐름을 한눈에 봅니다."
     >
       <section className="dashboard-grid">
         <article className="resource-panel resource-panel-wide">
           <div className="section-head">
-            <p className="eyebrow">Week View</p>
+            <p className="eyebrow">주간 보기</p>
             <h2>이번 주 예약 테이블</h2>
           </div>
           <p className="resource-note">
             서울시간 기준 월요일 00:00부터 일요일 24:00까지의 예약을 표시합니다. 그룹 색상은 색상 범례와
             표 행에 함께 반영됩니다.
           </p>
+
+          <QuickSlotPicker slots={quickSlots} />
 
           <div className="stats-summary">
             <div className="stat-card">
@@ -263,7 +344,7 @@ export default async function BookingsPage() {
 
           <div className="own-bookings-section">
             <div className="section-head">
-              <p className="eyebrow">Mine</p>
+              <p className="eyebrow">내 예약</p>
               <h2>내 예약</h2>
             </div>
             <p className="resource-note">
@@ -275,13 +356,24 @@ export default async function BookingsPage() {
 
         <aside className="resource-panel">
           <div className="section-head">
-            <p className="eyebrow">Create</p>
+            <p className="eyebrow">추가</p>
             <h2>예약 추가</h2>
           </div>
           <p className="resource-note">
             회의실을 고른 뒤 시작/종료 시간을 넣으면 됩니다. 입력값은 그대로 Supabase에 전달합니다.
           </p>
-          <BookingForm currentUserId={user.id} rooms={roomItems} />
+          <BookingForm
+            currentUserId={user.id}
+            rooms={roomItems}
+            initialValues={{
+              roomId: roomIdValue ?? roomItems[0]?.id,
+              startAt: startAtValue ?? "",
+              endAt: endAtValue ?? "",
+              title: titleValue ?? "",
+              notes: notesValue ?? "",
+              repeatCount: repeatCountValue ? Number(repeatCountValue) : 1,
+            }}
+          />
         </aside>
       </section>
     </DashboardShell>

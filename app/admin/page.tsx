@@ -59,14 +59,14 @@ export default async function AdminHomePage() {
 
   return (
     <DashboardShell
-      eyebrow="Admin"
+      eyebrow="관리자"
       title="관리자 허브"
       description="운영자가 자주 쓰는 승인, 그룹, 통계, 정책 화면을 한곳에 모았습니다."
     >
       <section className="dashboard-grid">
         <article className="resource-panel resource-panel-wide">
           <div className="section-head">
-            <p className="eyebrow">Navigation</p>
+            <p className="eyebrow">메뉴</p>
             <h2>관리 메뉴</h2>
           </div>
 

@@ -2,12 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type RoomOption = {
   id: string;
   name: string;
   room_number: string;
+};
+
+type BookingFormInitialValues = {
+  roomId?: string;
+  startAt?: string;
+  endAt?: string;
+  title?: string;
+  notes?: string;
+  repeatCount?: number;
 };
 
 function toIsoString(datetimeLocal: string) {
@@ -17,19 +26,30 @@ function toIsoString(datetimeLocal: string) {
 export default function BookingForm({
   currentUserId,
   rooms,
+  initialValues,
 }: {
   currentUserId: string | null;
   rooms: RoomOption[];
+  initialValues?: BookingFormInitialValues;
 }) {
   const router = useRouter();
-  const [roomId, setRoomId] = useState(rooms[0]?.id ?? "");
-  const [startAt, setStartAt] = useState("");
-  const [endAt, setEndAt] = useState("");
-  const [title, setTitle] = useState("");
-  const [notes, setNotes] = useState("");
-  const [repeatCount, setRepeatCount] = useState(1);
+  const [roomId, setRoomId] = useState(initialValues?.roomId ?? rooms[0]?.id ?? "");
+  const [startAt, setStartAt] = useState(initialValues?.startAt ?? "");
+  const [endAt, setEndAt] = useState(initialValues?.endAt ?? "");
+  const [title, setTitle] = useState(initialValues?.title ?? "");
+  const [notes, setNotes] = useState(initialValues?.notes ?? "");
+  const [repeatCount, setRepeatCount] = useState(initialValues?.repeatCount ?? 1);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setRoomId(initialValues?.roomId ?? rooms[0]?.id ?? "");
+    setStartAt(initialValues?.startAt ?? "");
+    setEndAt(initialValues?.endAt ?? "");
+    setTitle(initialValues?.title ?? "");
+    setNotes(initialValues?.notes ?? "");
+    setRepeatCount(initialValues?.repeatCount ?? 1);
+  }, [initialValues, rooms]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

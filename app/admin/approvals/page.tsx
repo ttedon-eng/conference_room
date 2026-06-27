@@ -95,7 +95,7 @@ export default async function AdminApprovalsPage({
     <main className="dashboard-page">
       <section className="dashboard-hero">
         <div>
-          <p className="eyebrow">Admin Approval</p>
+        <p className="eyebrow">승인 관리</p>
           <h1>승인 대기 사용자</h1>
           <p className="dashboard-lede">
             이메일 인증을 마친 계정 중 아직 승인되지 않은 사용자를 검토하고, 승인 시

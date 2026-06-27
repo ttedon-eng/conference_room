@@ -53,7 +53,7 @@ export default async function AdminPolicyPage({
       <section className="dashboard-grid">
         <article className="resource-panel resource-panel-wide">
           <div className="section-head">
-            <p className="eyebrow">Current</p>
+            <p className="eyebrow">현재</p>
             <h2>현재 정책값</h2>
           </div>
 
@@ -77,7 +77,7 @@ export default async function AdminPolicyPage({
 
         <aside className="resource-panel">
           <div className="section-head">
-            <p className="eyebrow">Update</p>
+            <p className="eyebrow">수정</p>
             <h2>정책 수정</h2>
           </div>
 
