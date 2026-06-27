@@ -1,6 +1,12 @@
 import { redirect } from "next/navigation";
+import WeeklyTimetable from "@/components/weekly-timetable";
 import DashboardShell from "@/components/dashboard-shell";
 import { createClient } from "@/lib/supabase/server";
+import {
+  buildWeeklyTimetableGrid,
+  getBookingsForWeek,
+  type BookingDashboardRow,
+} from "@/app/bookings/booking-view-model";
 
 type RoomRow = {
   id: string;
@@ -114,7 +120,11 @@ function getEmailNotificationLabel(notificationType: EmailLogRow["notification_t
   }
 }
 
-export default async function AdminStatsPage() {
+export default async function AdminStatsPage({
+  searchParams,
+}: {
+  searchParams?: { week?: string | string[] };
+}) {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
@@ -133,12 +143,17 @@ export default async function AdminStatsPage() {
     redirect(profile?.is_approved ? ACCOUNT_PAGE : `/pending?next=${encodeURIComponent(STATS_PAGE)}`);
   }
 
-  const { weekStart, weekEnd } = getSeoulWeekBounds();
+  const weekValue = Array.isArray(searchParams?.week) ? searchParams?.week[0] : searchParams?.week;
+  const weekOffset = Number(weekValue ?? "0") || 0;
+  const { weekStart, weekEnd } = getSeoulWeekBounds(
+    new Date(Date.now() + weekOffset * 7 * 24 * 60 * 60 * 1000),
+  );
   const warnings = [] as string[];
 
   const [
     { data: rooms, error: roomsError },
     { data: bookings, error: bookingsError },
+    { data: dashboardRows, error: dashboardRowsError },
     { data: groups, error: groupsError },
     { data: profiles, error: profilesError },
     { data: auditLogs, error: auditLogsError },
@@ -152,6 +167,7 @@ export default async function AdminStatsPage() {
       .from("bookings")
       .select("id, user_id, room_id, start_at, end_at")
       .order("start_at", { ascending: false }),
+    supabase.rpc("get_booking_dashboard_rows"),
     supabase
       .from("groups")
       .select("id, name, description, is_active")
@@ -185,6 +201,10 @@ export default async function AdminStatsPage() {
     warnings.push("예약 통계를 일부 불러오지 못했습니다.");
   }
 
+  if (dashboardRowsError) {
+    warnings.push("주간 예약 시간표를 일부 불러오지 못했습니다.");
+  }
+
   if (groupsError) {
     warnings.push("그룹 통계를 일부 불러오지 못했습니다.");
   }
@@ -215,20 +235,28 @@ export default async function AdminStatsPage() {
 
   const roomItems = (rooms ?? []) as RoomRow[];
   const bookingItems = (bookings ?? []) as BookingRow[];
+  const dashboardItems = (dashboardRows ?? []) as BookingDashboardRow[];
   const groupItems = (groups ?? []) as GroupRow[];
   const profileItems = (profiles ?? []) as ProfileRow[];
   const auditLogItems = (auditLogs ?? []) as AuditLogRow[];
   const emailLogItems = (emailLogs ?? []) as EmailLogRow[];
   const weeklyBookingLimitMinutes = bookingSettings?.weekly_booking_limit_minutes ?? 180;
   const totalEmailCount = (emailSuccessCount ?? 0) + (emailFailureCount ?? 0);
-  const currentWeekBookings = bookingItems.filter((booking) => {
-    const startedAt = new Date(booking.start_at);
-    return startedAt >= weekStart && startedAt < weekEnd;
+  const currentWeekBookings = getBookingsForWeek(dashboardItems, weekStart, weekEnd);
+  const timetableCells = buildWeeklyTimetableGrid({
+    bookings: currentWeekBookings,
+    weekStart,
   });
+  const currentWeekMinutes = currentWeekBookings.reduce(
+    (total, booking) => total + getBookingDurationMinutes(booking as BookingRow),
+    0,
+  );
   const currentWeekCancellations = auditLogItems.filter((log) => {
     const createdAt = new Date(log.created_at);
     return createdAt >= weekStart && createdAt < weekEnd;
   });
+  const previousWeekHref = `${STATS_PAGE}?week=${weekOffset - 1}`;
+  const nextWeekHref = `${STATS_PAGE}?week=${weekOffset + 1}`;
 
   const roomStats = roomItems
     .map((room) => {
@@ -320,6 +348,17 @@ export default async function AdminStatsPage() {
         </section>
       ) : null}
 
+      <section className="resource-panel resource-panel-wide">
+        <WeeklyTimetable
+          title="관리자 주간 예약 현황"
+          description="회의실, 사용자, 그룹 정보를 시간표로 확인합니다."
+          weekStart={weekStart}
+          previousWeekHref={previousWeekHref}
+          nextWeekHref={nextWeekHref}
+          cells={timetableCells}
+        />
+      </section>
+
       <section className="dashboard-grid">
         <article className="resource-panel resource-panel-wide">
           <div className="section-head">
@@ -370,9 +409,7 @@ export default async function AdminStatsPage() {
             </div>
             <div className="stat-card">
               <span className="stat-label">주간 예약 시간</span>
-              <strong>{formatMinutes(
-                currentWeekBookings.reduce((total, booking) => total + getBookingDurationMinutes(booking), 0),
-              )}</strong>
+              <strong>{formatMinutes(currentWeekMinutes)}</strong>
             </div>
             <div className="stat-card">
               <span className="stat-label">주간 취소</span>

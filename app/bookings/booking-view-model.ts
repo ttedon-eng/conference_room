@@ -88,6 +88,13 @@ export type BookingGroupRow = {
   toneKey: BookingToneKey;
 };
 
+export type WeeklyTimetableCell = {
+  dateKey: string;
+  dayOffset: number;
+  hour: number;
+  bookings: BookingDashboardRow[];
+};
+
 function hashString(value: string) {
   let hash = 0;
 
@@ -104,4 +111,54 @@ export function getBookingToneKey(seed: string | null | undefined): BookingToneK
   }
 
   return BOOKING_TONE_KEYS[hashString(seed) % BOOKING_TONE_KEYS.length];
+}
+
+export function getBookingsForWeek(bookings: BookingDashboardRow[], weekStart: Date, weekEnd: Date) {
+  return bookings.filter((booking) => {
+    const startedAt = new Date(booking.start_at);
+    return startedAt >= weekStart && startedAt < weekEnd;
+  });
+}
+
+function createSlotStart(weekStart: Date, dayOffset: number, hour: number) {
+  return new Date(weekStart.getTime() + dayOffset * 24 * 60 * 60 * 1000 + hour * 60 * 60 * 1000);
+}
+
+export function buildWeeklyTimetableGrid({
+  bookings,
+  weekStart,
+}: {
+  bookings: BookingDashboardRow[];
+  weekStart: Date;
+}) {
+  const weekDays = [0, 1, 2, 3, 4];
+  const hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+
+  return weekDays.flatMap((dayOffset) =>
+    hours.map((hour) => {
+      const slotStart = createSlotStart(weekStart, dayOffset, hour);
+      const slotEnd = new Date(slotStart.getTime() + 60 * 60 * 1000);
+      const bookingsForSlot = bookings
+        .filter((booking) => {
+          const bookingStart = new Date(booking.start_at);
+          const bookingEnd = new Date(booking.end_at);
+          return bookingStart < slotEnd && bookingEnd > slotStart;
+        })
+        .sort((left, right) => {
+          const startDiff = new Date(left.start_at).getTime() - new Date(right.start_at).getTime();
+          if (startDiff !== 0) {
+            return startDiff;
+          }
+
+          return left.room_name.localeCompare(right.room_name);
+        });
+
+      return {
+        dateKey: `${dayOffset}:${hour}`,
+        dayOffset,
+        hour,
+        bookings: bookingsForSlot,
+      } satisfies WeeklyTimetableCell;
+    }),
+  );
 }

@@ -71,7 +71,7 @@ export default async function AdminHomePage() {
     <DashboardShell
       eyebrow="관리자"
       title="관리자 허브"
-      description="승인, 그룹, 통계, 설정 화면을 한곳에 모았습니다."
+      description="승인, 그룹, 통계, 주간 예약, 설정 화면을 한곳에 모았습니다."
     >
       <section className="dashboard-grid">
         <article className="resource-panel resource-panel-wide">

@@ -1,4 +1,5 @@
 import DashboardShell from "@/components/dashboard-shell";
+import WeeklyTimetable from "@/components/weekly-timetable";
 import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
 import { createClient } from "@/lib/supabase/server";
@@ -7,6 +8,8 @@ import MyBookingsList from "./my-bookings-list";
 import QuickSlotPicker from "./quick-slot-picker";
 import {
   BOOKING_TONES,
+  buildWeeklyTimetableGrid,
+  getBookingsForWeek,
   getBookingToneKey,
   type BookingDashboardRow,
   type BookingGroupRow,
@@ -19,12 +22,6 @@ type RoomRow = {
   name: string;
   room_number: string;
 };
-
-const dateTimeFormatter = new Intl.DateTimeFormat("ko-KR", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "Asia/Seoul",
-});
 
 function formatSeoulDateTimeLocal(date: Date) {
   const formatter = new Intl.DateTimeFormat("en-CA", {
@@ -132,6 +129,7 @@ export default async function BookingsPage({
   searchParams,
 }: {
   searchParams?: {
+    week?: string | string[];
     roomId?: string | string[];
     startAt?: string | string[];
     endAt?: string | string[];
@@ -158,7 +156,11 @@ export default async function BookingsPage({
     redirect("/pending?next=%2Fbookings");
   }
 
-  const { weekStart, weekEnd } = getSeoulWeekBounds();
+  const weekValue = Array.isArray(searchParams?.week) ? searchParams?.week[0] : searchParams?.week;
+  const weekOffset = Number(weekValue ?? "0") || 0;
+  const { weekStart, weekEnd } = getSeoulWeekBounds(
+    new Date(Date.now() + weekOffset * 7 * 24 * 60 * 60 * 1000),
+  );
 
   const [
     { data: roomRowsData, error: roomRowsError },
@@ -199,9 +201,10 @@ export default async function BookingsPage({
 
   const roomItems = (roomRowsData ?? []) as RoomRow[];
 
-  const currentWeekBookings = allBookings.filter((booking) => {
-    const startedAt = new Date(booking.start_at);
-    return startedAt >= weekStart && startedAt < weekEnd;
+  const currentWeekBookings = getBookingsForWeek(allBookings, weekStart, weekEnd);
+  const timetableCells = buildWeeklyTimetableGrid({
+    bookings: currentWeekBookings,
+    weekStart,
   });
 
   const currentUserBookings = allBookings.filter((booking) => booking.user_id === user.id);
@@ -219,23 +222,25 @@ export default async function BookingsPage({
     : searchParams?.repeatCount;
 
   const quickSlots = roomItems.length ? createQuickSlots(weekStart, roomItems[0].id) : [];
+  const previousWeekHref = `${BOOKINGS_PAGE}?week=${weekOffset - 1}`;
+  const nextWeekHref = `${BOOKINGS_PAGE}?week=${weekOffset + 1}`;
 
   return (
     <DashboardShell
       eyebrow="예약"
       title="예약 관리"
-      description="이번 주 예약 테이블과 내 예약을 함께 확인하면서, 회의실과 그룹 흐름을 한눈에 봅니다."
+      description="이번 주 예약 시간표와 내 예약을 함께 확인하면서, 회의실과 그룹 흐름을 한눈에 봅니다."
     >
       <section className="dashboard-grid">
         <article className="resource-panel resource-panel-wide">
-          <div className="section-head">
-            <p className="eyebrow">주간 보기</p>
-            <h2>이번 주 예약 테이블</h2>
-          </div>
-          <p className="resource-note">
-            서울시간 기준 월요일 00:00부터 일요일 24:00까지의 예약을 표시합니다. 그룹 색상은 색상 범례와
-            표 행에 함께 반영됩니다.
-          </p>
+          <WeeklyTimetable
+            title="이번 주 예약 시간표"
+            description="월요일부터 금요일까지 08:00-18:00 사이의 예약을 시간표 형태로 보여줍니다."
+            weekStart={weekStart}
+            previousWeekHref={previousWeekHref}
+            nextWeekHref={nextWeekHref}
+            cells={timetableCells}
+          />
           {warnings.length ? (
             <div className="resource-note">
               {warnings.map((warning) => (
@@ -243,8 +248,6 @@ export default async function BookingsPage({
               ))}
             </div>
           ) : null}
-
-          <QuickSlotPicker slots={quickSlots} />
 
           <div className="stats-summary">
             <div className="stat-card">
@@ -288,72 +291,6 @@ export default async function BookingsPage({
             </div>
           ) : null}
 
-          {currentWeekBookings.length > 0 ? (
-            <div className="booking-table-shell">
-              <table className="booking-table">
-                <thead>
-                  <tr>
-                    <th scope="col">시간</th>
-                    <th scope="col">회의실</th>
-                    <th scope="col">예약자</th>
-                    <th scope="col">그룹</th>
-                    <th scope="col">제목</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentWeekBookings.map((booking) => {
-                    const tone = BOOKING_TONES[booking.toneKey];
-
-                    return (
-                      <tr
-                        key={booking.id}
-                        style={
-                          {
-                            "--booking-accent": tone.accent,
-                            "--booking-border": tone.border,
-                            "--booking-soft": tone.soft,
-                            "--booking-ink": tone.ink,
-                            "--booking-bg": tone.background,
-                          } as CSSProperties
-                        }
-                      >
-                        <td>
-                          <span className="booking-time-range">
-                            {dateTimeFormatter.format(new Date(booking.start_at))}
-                            <span>→</span>
-                            {dateTimeFormatter.format(new Date(booking.end_at))}
-                          </span>
-                        </td>
-                        <td>
-                          <strong>{booking.room_name}</strong>
-                          <span className="booking-cell-subtitle">Room {booking.room_number}</span>
-                        </td>
-                        <td>
-                          <strong>{booking.user_name}</strong>
-                          <span className="booking-cell-subtitle">{booking.user_email}</span>
-                        </td>
-                        <td>
-                          <span className="booking-group-chip">{booking.group_name || "그룹 없음"}</span>
-                        </td>
-                        <td>
-                          <strong>{booking.title || "제목 없음"}</strong>
-                          {booking.series_id ? (
-                            <span className="booking-cell-subtitle">
-                              정기 예약 {booking.occurrence_index ?? 1}회차
-                            </span>
-                          ) : null}
-                          {booking.notes ? <span className="booking-cell-subtitle">{booking.notes}</span> : null}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="resource-empty">이번 주에 표시할 예약이 아직 없습니다.</p>
-          )}
-
           <div className="own-bookings-section">
             <div className="section-head">
               <p className="eyebrow">내 예약</p>
@@ -367,6 +304,8 @@ export default async function BookingsPage({
         </article>
 
         <aside className="resource-panel">
+          <QuickSlotPicker slots={quickSlots} weekOffset={weekOffset} />
+
           <div className="section-head">
             <p className="eyebrow">추가</p>
             <h2>예약 추가</h2>

@@ -95,11 +95,12 @@ export default function MyBookingsList({
               <span>{dateTimeFormatter.format(new Date(booking.end_at))}</span>
             </div>
 
-            <p className="resource-copy">
-              예약자 {booking.user_name} · {booking.user_email}
+            <p className="resource-copy booking-owner-copy">
+              예약자 {booking.user_name}{" "}
+              <span className="booking-owner-email">· {booking.user_email}</span>
             </p>
 
-            {booking.notes ? <p className="resource-copy">{booking.notes}</p> : null}
+            {booking.notes ? <p className="resource-copy booking-notes">{booking.notes}</p> : null}
 
             {isPendingDelete ? (
               <div className="delete-confirm">

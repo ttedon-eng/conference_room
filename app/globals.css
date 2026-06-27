@@ -536,6 +536,15 @@ button[type="submit"]:hover:not(:disabled) {
   line-height: 1.7;
 }
 
+.booking-owner-copy {
+  font-size: 0.94rem;
+}
+
+.booking-notes {
+  border-left: 3px solid rgba(37, 99, 235, 0.18);
+  padding-left: 12px;
+}
+
 .booking-accented {
   border-color: var(--booking-border, var(--border));
   background:
@@ -572,6 +581,34 @@ button[type="submit"]:hover:not(:disabled) {
   border-radius: 999px;
   background: var(--booking-accent, var(--accent));
   box-shadow: 0 0 0 4px var(--booking-soft, var(--accent-soft));
+}
+
+.quick-slot-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.quick-slot-button {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 12px 14px;
+  color: var(--text);
+  text-align: left;
+  font-weight: 700;
+  line-height: 1.4;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.quick-slot-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.24);
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .booking-table-shell {
@@ -626,6 +663,141 @@ button[type="submit"]:hover:not(:disabled) {
 .booking-table strong {
   display: block;
   font-size: 0.98rem;
+}
+
+.weekly-timetable {
+  display: grid;
+  gap: 16px;
+}
+
+.weekly-timetable-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.weekly-timetable-head h2 {
+  margin: 0;
+}
+
+.weekly-timetable-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.weekly-timetable-grid {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.weekly-timetable-mobile {
+  display: none;
+}
+
+.weekly-timetable-table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.weekly-timetable-table th,
+.weekly-timetable-table td {
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 14px;
+  vertical-align: top;
+}
+
+.weekly-timetable-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(250, 252, 255, 0.98);
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.weekly-timetable-table thead th:first-child,
+.weekly-timetable-table tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: rgba(250, 252, 255, 0.98);
+}
+
+.weekly-timetable-table tbody th {
+  min-width: 92px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.weekly-timetable-table tr:last-child td,
+.weekly-timetable-table tr:last-child th {
+  border-bottom: 0;
+}
+
+.weekly-timetable-table td:last-child,
+.weekly-timetable-table thead th:last-child {
+  border-right: 0;
+}
+
+.weekly-timetable-cell {
+  display: grid;
+  gap: 10px;
+}
+
+.weekly-timetable-booking {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--booking-border, var(--border));
+  border-left-width: 4px;
+  border-radius: 16px;
+  background: var(--booking-bg, rgba(255, 255, 255, 0.84));
+  padding: 12px;
+  color: var(--text);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.04);
+}
+
+.weekly-timetable-booking strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.weekly-timetable-summary,
+.weekly-timetable-user {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.weekly-timetable-user {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weekly-timetable-group {
+  justify-self: start;
+  margin-top: 2px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+}
+
+.weekly-timetable-more,
+.weekly-timetable-empty {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
 }
 
 .booking-cell-subtitle {
@@ -1033,6 +1205,241 @@ button[type="submit"]:hover:not(:disabled) {
 
   .dashboard-nav {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .resource-panel,
+  .resource-item,
+  .card,
+  .panel,
+  .auth-card,
+  .account-card,
+  .dashboard-hero,
+  .weekly-timetable-grid {
+    border-radius: 20px;
+  }
+
+  .dashboard-grid {
+    gap: 14px;
+    margin-top: 16px;
+  }
+
+  .section-head h2 {
+    font-size: 1.4rem;
+  }
+
+  .weekly-timetable {
+    gap: 12px;
+  }
+
+  .weekly-timetable-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .weekly-timetable-nav {
+    width: 100%;
+  }
+
+  .weekly-timetable-nav .ghost-link {
+    flex: 1 1 0;
+  }
+
+  .weekly-timetable-grid {
+    border-radius: 18px;
+  }
+
+  .weekly-timetable-grid {
+    display: none;
+  }
+
+  .weekly-timetable-mobile {
+    display: grid;
+    gap: 12px;
+  }
+
+  .weekly-timetable-day-card {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.76);
+    padding: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .weekly-timetable-day-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .weekly-timetable-day-head h3 {
+    margin: 0;
+    font-size: 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  .weekly-timetable-day-head span {
+    color: var(--muted);
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  .weekly-timetable-day-slots {
+    display: grid;
+    gap: 10px;
+  }
+
+  .weekly-timetable-slot {
+    display: grid;
+    grid-template-columns: minmax(52px, 58px) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+  }
+
+  .weekly-timetable-slot-time {
+    padding-top: 8px;
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .weekly-timetable-slot-bookings {
+    display: grid;
+    gap: 8px;
+  }
+
+  .weekly-timetable-table {
+    min-width: 760px;
+  }
+
+  .weekly-timetable-table th,
+  .weekly-timetable-table td {
+    padding: 10px 8px;
+  }
+
+  .weekly-timetable-table thead th {
+    font-size: 0.7rem;
+  }
+
+  .weekly-timetable-table tbody th {
+    min-width: 68px;
+    font-size: 0.72rem;
+  }
+
+  .weekly-timetable-cell {
+    gap: 8px;
+  }
+
+  .weekly-timetable-booking {
+    padding: 10px;
+    gap: 3px;
+  }
+
+  .weekly-timetable-booking strong {
+    font-size: 0.86rem;
+  }
+
+  .weekly-timetable-summary,
+  .weekly-timetable-group {
+    font-size: 0.74rem;
+  }
+
+  .weekly-timetable-user {
+    display: none;
+  }
+
+  .weekly-timetable-more,
+  .weekly-timetable-empty {
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .weekly-timetable-day-empty {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .booking-legend {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    margin-right: -2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .booking-legend-item {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .resource-meta {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .resource-meta span {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .quick-slot-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .quick-slot-button {
+    min-height: 56px;
+    line-height: 1.35;
+  }
+
+  .quick-slot-button:active {
+    transform: translateY(1px);
+  }
+
+  .resource-list {
+    gap: 12px;
+  }
+
+  .resource-item {
+    padding: 16px;
+  }
+
+  .resource-item-top {
+    align-items: flex-start;
+  }
+
+  .booking-owner-copy {
+    margin-top: 8px;
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
+  .booking-owner-copy br {
+    display: none;
+  }
+
+  .booking-owner-copy .booking-owner-email {
+    display: none;
+  }
+
+  .booking-notes {
+    margin-top: 8px;
+    padding-left: 10px;
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+
+  .stats-summary {
+    gap: 10px;
   }
 }
 

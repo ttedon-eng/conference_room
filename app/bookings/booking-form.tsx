@@ -103,7 +103,7 @@ export default function BookingForm({
   };
 
   return (
-    <form className="stack-form" onSubmit={handleSubmit}>
+    <form className="stack-form" id="booking-form" onSubmit={handleSubmit}>
       <label>
         <span>회의실</span>
         <select required value={roomId} onChange={(event) => setRoomId(event.target.value)}>

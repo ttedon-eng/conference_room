@@ -12,9 +12,11 @@ type QuickSlot = {
 export default function QuickSlotPicker({
   slots,
   anchorId = "booking-form",
+  weekOffset,
 }: {
   slots: QuickSlot[];
   anchorId?: string;
+  weekOffset?: number;
 }) {
   const router = useRouter();
 
@@ -24,6 +26,10 @@ export default function QuickSlotPicker({
       startAt: slot.startAt,
       endAt: slot.endAt,
     });
+
+    if (typeof weekOffset === "number" && Number.isFinite(weekOffset) && weekOffset !== 0) {
+      params.set("week", String(weekOffset));
+    }
 
     router.push(`/bookings?${params.toString()}#${anchorId}`);
   };
