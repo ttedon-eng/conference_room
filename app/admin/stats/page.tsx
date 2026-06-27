@@ -134,6 +134,7 @@ export default async function AdminStatsPage() {
   }
 
   const { weekStart, weekEnd } = getSeoulWeekBounds();
+  const warnings = [] as string[];
 
   const [
     { data: rooms, error: roomsError },
@@ -177,39 +178,39 @@ export default async function AdminStatsPage() {
   ]);
 
   if (roomsError) {
-    throw roomsError;
+    warnings.push("회의실 통계를 일부 불러오지 못했습니다.");
   }
 
   if (bookingsError) {
-    throw bookingsError;
+    warnings.push("예약 통계를 일부 불러오지 못했습니다.");
   }
 
   if (groupsError) {
-    throw groupsError;
+    warnings.push("그룹 통계를 일부 불러오지 못했습니다.");
   }
 
   if (profilesError) {
-    throw profilesError;
+    warnings.push("사용자 통계를 일부 불러오지 못했습니다.");
   }
 
   if (auditLogsError) {
-    throw auditLogsError;
+    warnings.push("취소 통계를 일부 불러오지 못했습니다.");
   }
 
   if (emailLogsError) {
-    throw emailLogsError;
+    warnings.push("이메일 발송 로그를 일부 불러오지 못했습니다.");
   }
 
   if (bookingSettingsError) {
-    throw bookingSettingsError;
+    warnings.push("주간 예약 한도 설정을 불러오지 못했습니다.");
   }
 
   if (emailSuccessError) {
-    throw emailSuccessError;
+    warnings.push("이메일 발송 성공 집계를 일부 불러오지 못했습니다.");
   }
 
   if (emailFailureError) {
-    throw emailFailureError;
+    warnings.push("이메일 발송 실패 집계를 일부 불러오지 못했습니다.");
   }
 
   const roomItems = (rooms ?? []) as RoomRow[];
@@ -305,6 +306,20 @@ export default async function AdminStatsPage() {
       title="예약 통계"
       description="현재 스키마에서 계산 가능한 예약 통계를 한 화면에 모았습니다. 회의실별 집계, 사용자별 주간 집계, 그룹별 집계를 모두 확인할 수 있습니다."
     >
+      {warnings.length ? (
+        <section className="resource-panel resource-panel-wide">
+          <div className="section-head">
+            <p className="eyebrow">Warnings</p>
+            <h2>일부 데이터 누락</h2>
+          </div>
+          <div className="resource-note">
+            {warnings.map((warning) => (
+              <p key={warning}>{warning}</p>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <section className="dashboard-grid">
         <article className="resource-panel resource-panel-wide">
           <div className="section-head">

@@ -60,12 +60,13 @@ export default async function AdminRecurringPage({
     supabase.rpc("list_booking_series_overview"),
   ]);
 
+  const warnings = [] as string[];
   if (roomsError) {
-    throw roomsError;
+    warnings.push("회의실 목록을 불러오지 못했습니다.");
   }
 
   if (seriesError) {
-    throw seriesError;
+    warnings.push("정기 예약 목록을 불러오지 못했습니다.");
   }
 
   const rooms = roomsData ?? [];
@@ -104,7 +105,7 @@ export default async function AdminRecurringPage({
     : { data: [] as OccurrenceRow[], error: null };
 
   if (occurrenceError) {
-    throw occurrenceError;
+    warnings.push("회차 목록을 일부 불러오지 못했습니다.");
   }
 
   const occurrencesBySeries = new Map<string, OccurrenceRow[]>();
@@ -130,6 +131,13 @@ export default async function AdminRecurringPage({
           <p className="resource-note">
             정기 예약은 최대 12회까지 생성됩니다. 반복은 1주 간격으로 적용됩니다.
           </p>
+          {warnings.length ? (
+            <div className="resource-note">
+              {warnings.map((warning) => (
+                <p key={warning}>{warning}</p>
+              ))}
+            </div>
+          ) : null}
 
           <BookingForm currentUserId={user.id} rooms={rooms} />
         </article>

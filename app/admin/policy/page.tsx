@@ -38,8 +38,9 @@ export default async function AdminPolicyPage({
     .eq("id", 1)
     .maybeSingle();
 
+  const warnings = [] as string[];
   if (error) {
-    throw error;
+    warnings.push("예약 한도 설정을 불러오지 못했습니다.");
   }
 
   const weeklyLimit = settings?.weekly_booking_limit_minutes ?? 180;
@@ -72,6 +73,13 @@ export default async function AdminPolicyPage({
             </div>
           </div>
 
+          {warnings.length ? (
+            <div className="resource-note">
+              {warnings.map((warning) => (
+                <p key={warning}>{warning}</p>
+              ))}
+            </div>
+          ) : null}
           {errorValue ? <p className="resource-message">설정을 저장하지 못했습니다.</p> : null}
         </article>
 

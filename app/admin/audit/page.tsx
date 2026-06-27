@@ -150,8 +150,9 @@ export default async function AdminAuditPage() {
     .order("created_at", { ascending: false })
     .limit(50);
 
+  const warnings = [] as string[];
   if (auditLogsError) {
-    throw auditLogsError;
+    warnings.push("감사 로그를 일부 불러오지 못했습니다.");
   }
 
   const auditLogs = (auditLogsData ?? []) as AuditLogRow[];
@@ -165,7 +166,7 @@ export default async function AdminAuditPage() {
     : { data: [], error: null };
 
   if (actorRowsError) {
-    throw actorRowsError;
+    warnings.push("작성자 정보를 일부 불러오지 못했습니다.");
   }
 
   const actorById = new Map((actorRowsData ?? []).map((actor) => [actor.id, actor] as const));
@@ -186,6 +187,13 @@ export default async function AdminAuditPage() {
             감사 로그는 관리자 변경 흐름을 확인하는 조회 전용 화면입니다. 상세 데이터는 핵심 항목만
             보여줍니다.
           </p>
+          {warnings.length ? (
+            <div className="resource-note">
+              {warnings.map((warning) => (
+                <p key={warning}>{warning}</p>
+              ))}
+            </div>
+          ) : null}
 
           {auditLogs.length ? (
             <div className="resource-list">
