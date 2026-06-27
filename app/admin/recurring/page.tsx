@@ -52,7 +52,11 @@ export default async function AdminRecurringPage({
     { data: roomsData, error: roomsError },
     { data: seriesData, error: seriesError },
   ] = await Promise.all([
-    supabase.from("rooms").select("id, name, room_number").order("name", { ascending: true }),
+    supabase
+      .from("rooms")
+      .select("id, name, room_number")
+      .eq("is_active", true)
+      .order("name", { ascending: true }),
     supabase.rpc("list_booking_series_overview"),
   ]);
 

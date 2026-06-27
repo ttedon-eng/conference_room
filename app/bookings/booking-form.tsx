@@ -81,6 +81,9 @@ export default function BookingForm({
       const payload = (await response.json().catch(() => null)) as { error?: string } | null;
 
       if (!response.ok) {
+        if (payload?.error === "room_inactive") {
+          throw new Error("비활성 회의실은 예약할 수 없습니다.");
+        }
         throw new Error(payload?.error ?? "예약 추가에 실패했습니다.");
       }
 
@@ -173,7 +176,11 @@ export default function BookingForm({
         {saving ? "저장 중..." : "예약 추가"}
       </button>
 
-      {message ? <p className="resource-message">{message}</p> : null}
+      {message ? (
+        <p className="resource-message" role="status" aria-live="polite">
+          {message}
+        </p>
+      ) : null}
     </form>
   );
 }

@@ -47,12 +47,13 @@ export default function LoginPage({
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role, is_approved")
+        .select("role, is_approved, rejected_at")
         .eq("id", userId)
         .maybeSingle();
 
-      const destination =
-        profile?.is_approved || profile?.role === "admin"
+      const destination = profile?.rejected_at
+        ? `/signup?next=${encodeURIComponent(nextPath)}&error=rejected`
+        : profile?.is_approved || profile?.role === "admin"
           ? nextPath
           : `/pending?next=${encodeURIComponent(nextPath)}`;
 
@@ -72,7 +73,11 @@ export default function LoginPage({
         <h1>회의실 예약 로그인</h1>
         <p className="auth-copy">이메일 인증과 관리자 승인을 마친 계정만 사용할 수 있습니다.</p>
 
-        {notice ? <p className="auth-message">{notice}</p> : null}
+        {notice ? (
+          <p className="auth-message" role="status" aria-live="polite">
+            {notice}
+          </p>
+        ) : null}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
@@ -109,7 +114,11 @@ export default function LoginPage({
           </Link>
         </div>
 
-        {message ? <p className="auth-message">{message}</p> : null}
+        {message ? (
+          <p className="auth-message" role="status" aria-live="polite">
+            {message}
+          </p>
+        ) : null}
       </section>
     </main>
   );

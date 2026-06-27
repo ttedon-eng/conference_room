@@ -23,6 +23,8 @@ export default async function RoomsPage() {
     redirect("/pending?next=%2Frooms");
   }
 
+  const isAdmin = profile?.role === "admin";
+
   const [
     { data: rooms, error },
   ] = await Promise.all([
@@ -44,9 +46,13 @@ export default async function RoomsPage() {
     <DashboardShell
       eyebrow="Rooms"
       title="회의실 관리"
-      description="현재 등록된 회의실을 보고, 필요한 경우 새 회의실을 추가하는 첫 번째 화면입니다."
+      description={
+        isAdmin
+          ? "현재 등록된 회의실을 보고, 필요한 경우 새 회의실을 추가하거나 수정할 수 있습니다."
+          : "현재 등록된 회의실을 보고, 사용 가능한 공간만 확인할 수 있습니다."
+      }
     >
-      <RoomsClient currentUserId={currentUserId} rooms={roomItems} />
+      <RoomsClient currentUserId={currentUserId} isAdmin={isAdmin} rooms={roomItems} />
     </DashboardShell>
   );
 }

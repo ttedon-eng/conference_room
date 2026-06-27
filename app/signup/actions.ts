@@ -59,6 +59,20 @@ async function getSignupVerificationById(supabase: NonNullable<ReturnType<typeof
   return data;
 }
 
+async function getProfileByEmail(supabase: NonNullable<ReturnType<typeof createServiceClient>>, email: string) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, email, rejected_at, is_approved")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 export async function requestSignupVerification(formData: FormData) {
   const email = normalizeEmail(readValue(formData, "email"));
   const nextPath = normalizeNextPath(readValue(formData, "next"));
@@ -70,6 +84,15 @@ export async function requestSignupVerification(formData: FormData) {
   const supabase = createServiceClient();
   if (!supabase) {
     failSignup(SIGNUP_PAGE, "service_unavailable");
+  }
+
+  const existingProfile = await getProfileByEmail(supabase, email);
+  if (existingProfile && !existingProfile.rejected_at && !existingProfile.is_approved) {
+    failSignup(SIGNUP_PAGE, "pending");
+  }
+
+  if (existingProfile?.is_approved) {
+    failSignup(SIGNUP_PAGE, "already_registered");
   }
 
   const existingVerification = await getSignupVerificationByEmail(supabase, email);
@@ -216,6 +239,7 @@ export async function completeSignup(formData: FormData) {
     failSignup(`${SIGNUP_VERIFY_PAGE}?session=${encodeURIComponent(sessionId)}&next=${encodeURIComponent(nextPath)}`, "verification_required");
   }
 
+  const existingProfile = await getProfileByEmail(supabase, verification.email);
   const { data: group, error: groupError } = await supabase
     .from("groups")
     .select("id, name, is_active")
@@ -228,33 +252,78 @@ export async function completeSignup(formData: FormData) {
     failSignup(`${SIGNUP_COMPLETE_PAGE}?session=${encodeURIComponent(sessionId)}&next=${encodeURIComponent(nextPath)}`, "invalid_group");
   }
 
-  const { data: createdUser, error: createUserError } = await supabase.auth.admin.createUser({
-    email: verification.email,
-    password,
-    email_confirm: true,
-    user_metadata: {
-      full_name: fullName,
-    },
-  });
-
-  if (createUserError || !createdUser.user) {
-    failSignup(`${SIGNUP_COMPLETE_PAGE}?session=${encodeURIComponent(sessionId)}&next=${encodeURIComponent(nextPath)}`, "create_failed");
-  }
-
-  const userId = createdUser.user.id;
   const now = new Date().toISOString();
-  const { error: profileError } = await supabase
-    .from("profiles")
-    .update({
-      full_name: fullName,
-      group_id: group.id,
-      updated_at: now,
-    })
-    .eq("id", userId);
 
-  if (profileError) {
-    await supabase.auth.admin.deleteUser(userId);
-    throw profileError;
+  let userId: string;
+
+  if (existingProfile?.rejected_at) {
+    const { error: authUpdateError } = await supabase.auth.admin.updateUserById(existingProfile.id, {
+      password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: fullName,
+      },
+    });
+
+    if (authUpdateError) {
+      failSignup(
+        `${SIGNUP_COMPLETE_PAGE}?session=${encodeURIComponent(sessionId)}&next=${encodeURIComponent(nextPath)}`,
+        "create_failed",
+      );
+    }
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({
+        full_name: fullName,
+        group_id: group.id,
+        is_approved: false,
+        approved_at: null,
+        approved_by: null,
+        rejected_at: null,
+        rejected_by: null,
+        rejection_reason: null,
+        updated_at: now,
+      })
+      .eq("id", existingProfile.id);
+
+    if (profileError) {
+      throw profileError;
+    }
+
+    userId = existingProfile.id;
+  } else {
+    const { data: createdUser, error: createUserError } = await supabase.auth.admin.createUser({
+      email: verification.email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: fullName,
+      },
+    });
+
+    if (createUserError || !createdUser.user) {
+      failSignup(
+        `${SIGNUP_COMPLETE_PAGE}?session=${encodeURIComponent(sessionId)}&next=${encodeURIComponent(nextPath)}`,
+        "create_failed",
+      );
+    }
+
+    userId = createdUser.user.id;
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({
+        full_name: fullName,
+        group_id: group.id,
+        updated_at: now,
+      })
+      .eq("id", userId);
+
+    if (profileError) {
+      await supabase.auth.admin.deleteUser(userId);
+      throw profileError;
+    }
   }
 
   const { error: cleanupError } = await supabase

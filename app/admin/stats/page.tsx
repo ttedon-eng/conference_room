@@ -142,6 +142,9 @@ export default async function AdminStatsPage() {
     { data: profiles, error: profilesError },
     { data: auditLogs, error: auditLogsError },
     { data: emailLogs, error: emailLogsError },
+    { data: bookingSettings, error: bookingSettingsError },
+    { count: emailSuccessCount, error: emailSuccessError },
+    { count: emailFailureCount, error: emailFailureError },
   ] = await Promise.all([
     supabase.from("rooms").select("id, name, room_number").order("name", { ascending: true }),
     supabase
@@ -168,6 +171,9 @@ export default async function AdminStatsPage() {
       .select("id, booking_id, notification_type, recipient_email, subject, status, error_message, created_at")
       .order("created_at", { ascending: false })
       .limit(10),
+    supabase.from("booking_settings").select("weekly_booking_limit_minutes").eq("id", 1).maybeSingle(),
+    supabase.from("email_delivery_logs").select("id", { count: "exact", head: true }).eq("status", "success"),
+    supabase.from("email_delivery_logs").select("id", { count: "exact", head: true }).eq("status", "failure"),
   ]);
 
   if (roomsError) {
@@ -194,12 +200,26 @@ export default async function AdminStatsPage() {
     throw emailLogsError;
   }
 
+  if (bookingSettingsError) {
+    throw bookingSettingsError;
+  }
+
+  if (emailSuccessError) {
+    throw emailSuccessError;
+  }
+
+  if (emailFailureError) {
+    throw emailFailureError;
+  }
+
   const roomItems = (rooms ?? []) as RoomRow[];
   const bookingItems = (bookings ?? []) as BookingRow[];
   const groupItems = (groups ?? []) as GroupRow[];
   const profileItems = (profiles ?? []) as ProfileRow[];
   const auditLogItems = (auditLogs ?? []) as AuditLogRow[];
   const emailLogItems = (emailLogs ?? []) as EmailLogRow[];
+  const weeklyBookingLimitMinutes = bookingSettings?.weekly_booking_limit_minutes ?? 180;
+  const totalEmailCount = (emailSuccessCount ?? 0) + (emailFailureCount ?? 0);
   const currentWeekBookings = bookingItems.filter((booking) => {
     const startedAt = new Date(booking.start_at);
     return startedAt >= weekStart && startedAt < weekEnd;
@@ -343,6 +363,14 @@ export default async function AdminStatsPage() {
               <span className="stat-label">주간 취소</span>
               <strong>{formatCount(totalWeeklyCancellations)}건</strong>
             </div>
+            <div className="stat-card">
+              <span className="stat-label">주간 예약 제한</span>
+              <strong>{weeklyBookingLimitMinutes}분</strong>
+            </div>
+            <div className="stat-card">
+              <span className="stat-label">이메일 발송</span>
+              <strong>{formatCount(totalEmailCount)}건</strong>
+            </div>
           </div>
 
           {userStats.length > 0 ? (
@@ -457,6 +485,21 @@ export default async function AdminStatsPage() {
         <p className="resource-note">
           예약 생성과 삭제 시도마다 발송 결과를 저장합니다. 실패하더라도 예약은 계속 진행됩니다.
         </p>
+
+        <div className="stats-summary">
+          <div className="stat-card">
+            <span className="stat-label">성공</span>
+            <strong>{formatCount(emailSuccessCount ?? 0)}건</strong>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">실패</span>
+            <strong>{formatCount(emailFailureCount ?? 0)}건</strong>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">전체</span>
+            <strong>{formatCount(totalEmailCount)}건</strong>
+          </div>
+        </div>
 
         {emailLogItems.length > 0 ? (
           <div className="resource-list">

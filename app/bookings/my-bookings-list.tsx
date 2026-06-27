@@ -133,7 +133,11 @@ export default function MyBookingsList({
         );
       })}
 
-      {message ? <p className="resource-message">{message}</p> : null}
+      {message ? (
+        <p className="resource-message" role="status" aria-live="polite">
+          {message}
+        </p>
+      ) : null}
     </div>
   );
 }

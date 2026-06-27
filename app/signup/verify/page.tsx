@@ -89,7 +89,11 @@ export default async function SignupVerifyPage({
           </Link>
         </div>
 
-        {message ? <p className="auth-message">{message}</p> : null}
+        {message ? (
+          <p className="auth-message" role="status" aria-live="polite">
+            {message}
+          </p>
+        ) : null}
 
         <p className="resource-note">
           실패 횟수: {verification.failed_attempts}회

@@ -8,9 +8,11 @@ import type { RoomRow } from "./types";
 
 export default function RoomsClient({
   currentUserId,
+  isAdmin,
   rooms,
 }: {
   currentUserId: string | null;
+  isAdmin: boolean;
   rooms: RoomRow[];
 }) {
   const router = useRouter();
@@ -78,50 +80,67 @@ export default function RoomsClient({
 
                   {room.description ? <p className="resource-copy">{room.description}</p> : null}
 
-                  <div className="resource-item-actions">
-                    <button
-                      type="button"
-                      className="room-action-button"
-                      onClick={() => setEditingRoom(room)}
-                    >
-                      수정
-                    </button>
-                    <button
-                      type="button"
-                      className="room-action-button is-destructive"
-                      onClick={() => handleDelete(room)}
-                    >
-                      삭제
-                    </button>
-                  </div>
+                  {isAdmin ? (
+                    <div className="resource-item-actions">
+                      <button
+                        type="button"
+                        className="room-action-button"
+                        onClick={() => setEditingRoom(room)}
+                      >
+                        수정
+                      </button>
+                      <button
+                        type="button"
+                        className="room-action-button is-destructive"
+                        onClick={() => handleDelete(room)}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  ) : null}
                 </article>
               );
             })}
           </div>
         ) : (
-          <p className="resource-empty">아직 등록된 회의실이 없습니다. 오른쪽 폼으로 첫 회의실을 추가하세요.</p>
+          <p className="resource-empty">
+            아직 등록된 회의실이 없습니다.
+            {isAdmin ? " 오른쪽 폼으로 첫 회의실을 추가하세요." : " 관리자에게 회의실 추가를 요청해 주세요."}
+          </p>
         )}
       </article>
 
-      <aside className="resource-panel">
-        <div className="section-head">
-          <p className="eyebrow">{editingRoom ? "수정" : "생성"}</p>
-          <h2>{editingRoom ? "회의실 수정" : "회의실 추가"}</h2>
-        </div>
-        <p className="resource-note">
-          {editingRoom
-            ? "선택한 회의실의 값을 바꾸고 저장하면 목록이 즉시 갱신됩니다."
-            : "관리자만 실제로 저장할 수 있습니다. 이름, 번호, 수용 인원만 먼저 채우면 됩니다."}
-        </p>
-        <RoomForm
-          currentUserId={currentUserId}
-          selectedRoom={editingRoom}
-          onCancelEdit={() => setEditingRoom(null)}
-          onSaved={() => {
-            setEditingRoom(null);
-          }}
-        />
-      </aside>
+      {isAdmin ? (
+        <aside className="resource-panel">
+          <div className="section-head">
+            <p className="eyebrow">{editingRoom ? "수정" : "생성"}</p>
+            <h2>{editingRoom ? "회의실 수정" : "회의실 추가"}</h2>
+          </div>
+          <p className="resource-note">
+            {editingRoom
+              ? "선택한 회의실의 값을 바꾸고 저장하면 목록이 즉시 갱신됩니다."
+              : "관리자만 실제로 저장할 수 있습니다. 이름, 번호, 수용 인원만 먼저 채우면 됩니다."}
+          </p>
+          <RoomForm
+            currentUserId={currentUserId}
+            selectedRoom={editingRoom}
+            onCancelEdit={() => setEditingRoom(null)}
+            onSaved={() => {
+              setEditingRoom(null);
+            }}
+          />
+        </aside>
+      ) : (
+        <aside className="resource-panel">
+          <div className="section-head">
+            <p className="eyebrow">조회</p>
+            <h2>회의실 조회 전용</h2>
+          </div>
+          <p className="resource-note">
+            현재 계정은 승인된 일반 사용자입니다. 회의실 추가, 수정, 삭제는 관리자에게만 열려 있습니다.
+          </p>
+        </aside>
+      )}
     </section>
   );
 }

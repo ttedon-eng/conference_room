@@ -147,7 +147,11 @@ export default function RoomForm({
         </button>
       ) : null}
 
-      {message ? <p className="resource-message">{message}</p> : null}
+      {message ? (
+        <p className="resource-message" role="status" aria-live="polite">
+          {message}
+        </p>
+      ) : null}
     </form>
   );
 }

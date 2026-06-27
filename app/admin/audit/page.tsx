@@ -42,7 +42,8 @@ function getActionLabel(action: string) {
     case "group_updated":
       return "그룹 수정";
     case "group_deleted":
-      return "그룹 삭제";
+    case "group_deactivated":
+      return "그룹 미사용 처리";
     case "group_assignment_updated":
       return "그룹 배정";
     case "room_created":
@@ -55,8 +56,12 @@ function getActionLabel(action: string) {
       return "예약 삭제";
     case "booking_series_cancelled":
       return "정기 예약 취소";
+    case "booking_series_updated":
+      return "정기 예약 수정";
     case "booking_policy_updated":
-      return "정책 변경";
+      return "예약 정책 변경";
+    case "signup_verification_unlocked":
+      return "인증 잠금 해제";
     default:
       return action;
   }
@@ -259,6 +264,15 @@ export default async function AdminAuditPage() {
                   <p className="resource-subtitle">삭제와 주간 제한 변경도 함께 보관합니다.</p>
                 </div>
                 <span className="status-pill is-active">audit</span>
+              </div>
+            </article>
+            <article className="resource-item">
+              <div className="resource-item-top">
+                <div>
+                  <h3>인증 잠금 해제</h3>
+                  <p className="resource-subtitle">실패 누적 해제도 감사 로그에 남깁니다.</p>
+                </div>
+                <span className="status-pill is-inactive">signup</span>
               </div>
             </article>
           </div>

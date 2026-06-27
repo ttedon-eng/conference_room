@@ -120,7 +120,11 @@ export default function AccountForm({
         </button>
       </form>
 
-      {message ? <p className="auth-message">{message}</p> : null}
+      {message ? (
+        <p className="auth-message" role="status" aria-live="polite">
+          {message}
+        </p>
+      ) : null}
     </section>
   );
 }

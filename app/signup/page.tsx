@@ -13,6 +13,12 @@ function resolveErrorMessage(errorValue: string | null | undefined) {
       return "허용된 회사 이메일만 사용할 수 있습니다.";
     case "locked":
       return "이 이메일은 인증이 잠겨 있습니다. 관리자 해제가 필요합니다.";
+    case "rejected":
+      return "거절된 계정입니다. 처음부터 다시 가입해 주세요.";
+    case "pending":
+      return "이미 승인 대기 중인 가입이 있습니다. 승인 결과를 기다려 주세요.";
+    case "already_registered":
+      return "이미 승인된 계정입니다. 로그인해 주세요.";
     case "service_unavailable":
       return "가입 서비스를 사용할 수 없습니다.";
     default:
@@ -74,7 +80,11 @@ export default async function SignupPage({
           </Link>
         </div>
 
-        {message ? <p className="auth-message">{message}</p> : null}
+        {message ? (
+          <p className="auth-message" role="status" aria-live="polite">
+            {message}
+          </p>
+        ) : null}
 
         <div className="resource-note" style={{ marginTop: 24 }}>
           <strong>선택 가능한 그룹</strong>

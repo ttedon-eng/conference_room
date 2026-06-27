@@ -165,7 +165,11 @@ export default async function BookingsPage({
     { data: bookingRowsData, error: bookingRowsError },
     { data: groupRowsData, error: groupRowsError },
   ] = await Promise.all([
-    supabase.from("rooms").select("id, name, room_number").order("name", { ascending: true }),
+    supabase
+      .from("rooms")
+      .select("id, name, room_number")
+      .eq("is_active", true)
+      .order("name", { ascending: true }),
     supabase.rpc("get_booking_dashboard_rows"),
     supabase.rpc("list_booking_groups"),
   ]);

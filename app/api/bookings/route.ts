@@ -148,12 +148,16 @@ export async function POST(request: Request) {
 
   const { data: room, error: roomError } = await supabase
     .from("rooms")
-    .select("id, name, room_number")
+    .select("id, name, room_number, is_active")
     .eq("id", payload.roomId)
     .maybeSingle();
 
   if (roomError || !room) {
     return NextResponse.json({ error: "room_not_found" }, { status: 404 });
+  }
+
+  if (!room.is_active) {
+    return NextResponse.json({ error: "room_inactive" }, { status: 400 });
   }
 
   const repeatCount = Number.isFinite(payload.repeatCount) ? Math.trunc(payload.repeatCount ?? 1) : 1;
