@@ -22,6 +22,7 @@ export default function LoginPage({
   const nextPath = normalizeNextPath(nextValue ?? null);
   const noticeValue = Array.isArray(searchParams?.message) ? searchParams?.message[0] : searchParams?.message;
   const notice = noticeValue === "signup_complete" ? "가입이 완료되었습니다. 로그인해 주세요." : null;
+  const hasExplicitNext = nextValue !== undefined && nextValue !== null && nextValue !== "";
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -51,10 +52,13 @@ export default function LoginPage({
         .eq("id", userId)
         .maybeSingle();
 
+      const isAdmin = profile?.role === "admin";
       const destination = profile?.rejected_at
         ? `/signup?next=${encodeURIComponent(nextPath)}&error=rejected`
-        : profile?.is_approved || profile?.role === "admin"
-          ? nextPath
+        : profile?.is_approved || isAdmin
+          ? isAdmin && !hasExplicitNext
+            ? "/admin"
+            : nextPath
           : `/pending?next=${encodeURIComponent(nextPath)}`;
 
       router.push(destination);
