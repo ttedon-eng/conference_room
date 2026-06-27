@@ -244,6 +244,11 @@ export default async function BookingsPage() {
                         </td>
                         <td>
                           <strong>{booking.title || "제목 없음"}</strong>
+                          {booking.series_id ? (
+                            <span className="booking-cell-subtitle">
+                              정기 예약 {booking.occurrence_index ?? 1}회차
+                            </span>
+                          ) : null}
                           {booking.notes ? <span className="booking-cell-subtitle">{booking.notes}</span> : null}
                         </td>
                       </tr>

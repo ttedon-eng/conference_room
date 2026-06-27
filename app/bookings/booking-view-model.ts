@@ -76,6 +76,8 @@ export type BookingDashboardRow = {
   end_at: string;
   title: string | null;
   notes: string | null;
+  series_id: string | null;
+  occurrence_index: number | null;
   toneKey: BookingToneKey;
 };
 

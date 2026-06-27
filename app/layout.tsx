@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Conference Room",
-  description: "회의실 예약 MVP",
+  description: "회의실 예약 및 운영 시스템",
 };
 
 export default function RootLayout({

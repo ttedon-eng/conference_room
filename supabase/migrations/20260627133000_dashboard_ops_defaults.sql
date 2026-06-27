@@ -27,7 +27,9 @@ returns table (
   start_at timestamptz,
   end_at timestamptz,
   title text,
-  notes text
+  notes text,
+  series_id uuid,
+  occurrence_index integer
 )
 language plpgsql
 security definer
@@ -52,7 +54,9 @@ begin
       b.start_at,
       b.end_at,
       b.title,
-      b.notes
+      b.notes,
+      b.series_id,
+      b.occurrence_index
     from public.bookings b
     join public.rooms r
       on r.id = b.room_id

@@ -23,36 +23,37 @@ export default function Home() {
     <main className="page">
       <section className="hero">
         <div className="hero-copy">
-          <p className="eyebrow">Conference Room MVP</p>
-          <h1>회의실 예약 시스템의 첫 화면입니다.</h1>
+          <p className="eyebrow">Conference Room</p>
+          <h1>회의실 예약과 운영을 한곳에서 관리합니다.</h1>
           <p className="lede">
-            지금은 Vercel과 Supabase 연동을 위한 초기 개발 단계입니다. 기본
-            정책을 지키는 예약 시스템으로 점차 확장해 나갑니다.
+            회사 이메일 가입, 관리자 승인, 예약 정책, 통계와 감사 로그까지 한 흐름으로 이어지는
+            회의실 예약 시스템입니다.
           </p>
-        <div className="hero-meta">
-          <span>Vercel 자동 배포</span>
-          <span>Supabase 연동 준비</span>
-          <span>Asia/Seoul 기준</span>
+          <div className="hero-meta">
+            <span>회사 이메일 가입</span>
+            <span>서울시간 기준 정책</span>
+            <span>관리자 운영 도구</span>
+          </div>
+          <div className="hero-actions">
+            <Link className="primary-link" href="/login">
+              로그인
+            </Link>
+            <Link className="ghost-link" href="/signup">
+              회원가입
+            </Link>
+          </div>
         </div>
-        <div className="hero-actions">
-          <Link className="primary-link" href="/login">
-            로그인 시작
-          </Link>
-          <Link className="ghost-link" href="/account">
-            내 계정 보기
-          </Link>
-        </div>
-      </div>
 
         <aside className="panel">
           <div className="panel-header">
-            <span>초기 범위</span>
-            <strong>P0 MVP</strong>
+            <span>주요 기능</span>
+            <strong>운영용</strong>
           </div>
           <ul className="checklist">
             <li>회사 이메일 가입</li>
             <li>이메일 인증</li>
             <li>관리자 승인</li>
+            <li>정기 예약 관리</li>
             <li>회의실 CRUD</li>
             <li>예약 생성 / 삭제</li>
           </ul>
@@ -61,8 +62,8 @@ export default function Home() {
 
       <section className="section">
         <div className="section-head">
-          <p className="eyebrow">What we are building</p>
-          <h2>MVP가 먼저 다져야 할 것들</h2>
+          <p className="eyebrow">Overview</p>
+          <h2>서비스가 제공하는 기준</h2>
         </div>
         <div className="grid">
           {highlights.map((item) => (

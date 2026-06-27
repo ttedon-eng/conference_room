@@ -53,6 +53,8 @@ function getActionLabel(action: string) {
       return "회의실 삭제";
     case "booking_deleted":
       return "예약 삭제";
+    case "booking_series_cancelled":
+      return "정기 예약 취소";
     case "booking_policy_updated":
       return "정책 변경";
     default:

@@ -64,7 +64,7 @@ export default async function SignupCompletePage({
   return (
     <main className="auth-shell">
       <section className="auth-card">
-        <p className="eyebrow">Complete</p>
+        <p className="eyebrow">가입 완료</p>
         <h1>이름, 비밀번호, 그룹 선택</h1>
         <p className="auth-copy">
           {verification.email} 계정의 기본 정보를 입력하면 가입이 완료됩니다.
@@ -105,4 +105,3 @@ export default async function SignupCompletePage({
     </main>
   );
 }
-

@@ -68,15 +68,15 @@ export default function LoginPage({
   return (
     <main className="auth-shell">
       <section className="auth-card">
-        <p className="eyebrow">Supabase Auth</p>
-        <h1>로그인</h1>
-        <p className="auth-copy">이메일 인증과 관리자 승인을 마친 계정만 들어올 수 있습니다.</p>
+        <p className="eyebrow">로그인</p>
+        <h1>회의실 예약 로그인</h1>
+        <p className="auth-copy">이메일 인증과 관리자 승인을 마친 계정만 사용할 수 있습니다.</p>
 
         {notice ? <p className="auth-message">{notice}</p> : null}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
-            <span>Email</span>
+            <span>이메일</span>
             <input
               type="email"
               required
@@ -87,7 +87,7 @@ export default function LoginPage({
           </label>
 
           <label>
-            <span>Password</span>
+            <span>비밀번호</span>
             <input
               type="password"
               required
@@ -105,7 +105,7 @@ export default function LoginPage({
 
         <div className="auth-actions">
           <Link className="link-button" href={`/signup?next=${encodeURIComponent(nextPath)}`}>
-            회원가입
+            회원가입 시작
           </Link>
         </div>
 

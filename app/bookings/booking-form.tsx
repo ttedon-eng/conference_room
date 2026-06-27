@@ -27,6 +27,7 @@ export default function BookingForm({
   const [endAt, setEndAt] = useState("");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
+  const [repeatCount, setRepeatCount] = useState(1);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -53,6 +54,7 @@ export default function BookingForm({
           endAt: toIsoString(endAt),
           title,
           notes,
+          repeatCount,
         }),
       });
 
@@ -67,6 +69,7 @@ export default function BookingForm({
       setEndAt("");
       setTitle("");
       setNotes("");
+      setRepeatCount(1);
       setMessage("예약을 추가했습니다.");
       router.refresh();
     } catch (error) {
@@ -129,7 +132,22 @@ export default function BookingForm({
         />
       </label>
 
-      <p className="resource-note">시간은 Asia/Seoul 기준 30분 단위, 1회 최대 60분 규칙을 따릅니다.</p>
+      <label>
+        <span>정기 예약 횟수</span>
+        <input
+          type="number"
+          min={1}
+          max={12}
+          step={1}
+          value={repeatCount}
+          onChange={(event) => setRepeatCount(Number(event.target.value) || 1)}
+        />
+      </label>
+
+      <p className="resource-note">
+        시간은 Asia/Seoul 기준 30분 단위, 1회 최대 60분 규칙을 따릅니다. 정기 예약은 최대 12회까지
+        생성할 수 있습니다.
+      </p>
 
       <button type="submit" disabled={saving || rooms.length === 0}>
         {saving ? "저장 중..." : "예약 추가"}

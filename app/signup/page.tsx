@@ -51,17 +51,17 @@ export default async function SignupPage({
   return (
     <main className="auth-shell">
       <section className="auth-card">
-        <p className="eyebrow">Signup</p>
-        <h1>이메일로 가입 시작</h1>
+        <p className="eyebrow">회원가입</p>
+        <h1>이메일로 가입을 시작합니다.</h1>
         <p className="auth-copy">
-          허용된 회사 이메일로 인증번호를 발송합니다. 인증 후 이름, 비밀번호, 그룹을
-          입력하면 가입이 완료됩니다.
+          허용된 회사 이메일로 인증번호를 발송합니다. 인증 후 이름, 비밀번호, 그룹을 입력하면
+          가입이 완료됩니다.
         </p>
 
         <form action={requestSignupVerification} className="auth-form">
           <input type="hidden" name="next" value={nextPath} />
           <label>
-            <span>Email</span>
+            <span>이메일</span>
             <input type="email" required name="email" placeholder="name@samsung.com" />
           </label>
 

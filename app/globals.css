@@ -29,7 +29,17 @@ body {
   min-height: 100vh;
   color: var(--text);
   font-family:
-    Inter, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+    Inter, "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 .page {
@@ -936,4 +946,15 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

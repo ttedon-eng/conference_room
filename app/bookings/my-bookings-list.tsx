@@ -85,7 +85,9 @@ export default function MyBookingsList({
                   {booking.room_name} · Room {booking.room_number}
                 </p>
               </div>
-              <span className="status-pill is-owner">{booking.group_name || "그룹 없음"}</span>
+              <span className="status-pill is-owner">
+                {booking.series_id ? `정기 ${booking.occurrence_index ?? 1}회차` : booking.group_name || "그룹 없음"}
+              </span>
             </div>
 
             <div className="resource-meta">

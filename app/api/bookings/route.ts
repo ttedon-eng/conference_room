@@ -23,6 +23,97 @@ function formatBookingMessage({
   ].join("\n");
 }
 
+async function sendCreatedBookingEmail(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  {
+    bookingId,
+    userId,
+    recipientEmail,
+    room,
+    booking,
+    subjectPrefix,
+  }: {
+    bookingId: string;
+    userId: string;
+    recipientEmail: string;
+    room: { id: string; name: string; room_number: string };
+    booking: { title: string | null; notes: string | null; start_at: string; end_at: string };
+    subjectPrefix: string;
+  },
+) {
+  const subject = `${subjectPrefix} ${room.name} 예약이 생성되었습니다.`;
+  const body = formatBookingMessage({
+    title: booking.title,
+    roomName: room.name,
+    roomNumber: room.room_number,
+    startAt: booking.start_at,
+    endAt: booking.end_at,
+  });
+
+  try {
+    const providerResponse = await sendEmailMessage({
+      to: recipientEmail,
+      subject,
+      body,
+    });
+
+    try {
+      await recordEmailDelivery(supabase, {
+        bookingId,
+        notificationType: "booking_created",
+        actorId: userId,
+        recipientUserId: userId,
+        recipientEmail,
+        subject,
+        body,
+        status: "success",
+        providerName: "resend",
+        providerMessageId:
+          typeof providerResponse?.id === "string" ? providerResponse.id : null,
+        providerResponse,
+        payload: {
+          room_id: room.id,
+          room_name: room.name,
+          room_number: room.room_number,
+          title: booking.title,
+          notes: booking.notes,
+          start_at: booking.start_at,
+          end_at: booking.end_at,
+        },
+      });
+    } catch (logError) {
+      console.error("Failed to record booking creation email log", logError);
+    }
+  } catch (error) {
+    try {
+      await recordEmailDelivery(supabase, {
+        bookingId,
+        notificationType: "booking_created",
+        actorId: userId,
+        recipientUserId: userId,
+        recipientEmail,
+        subject,
+        body,
+        status: "failure",
+        providerName: "resend",
+        errorMessage: error instanceof Error ? error.message : "email_send_failed",
+        providerResponse: {},
+        payload: {
+          room_id: room.id,
+          room_name: room.name,
+          room_number: room.room_number,
+          title: booking.title,
+          notes: booking.notes,
+          start_at: booking.start_at,
+          end_at: booking.end_at,
+        },
+      });
+    } catch (logError) {
+      console.error("Failed to record booking creation email log", logError);
+    }
+  }
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
@@ -48,6 +139,7 @@ export async function POST(request: Request) {
     endAt?: string;
     title?: string;
     notes?: string;
+    repeatCount?: number;
   };
 
   if (!payload.roomId || !payload.startAt || !payload.endAt) {
@@ -64,98 +156,91 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "room_not_found" }, { status: 404 });
   }
 
-  const { data: insertedBooking, error } = await supabase
-    .from("bookings")
-    .insert({
-      room_id: room.id,
-      user_id: user.id,
-      start_at: payload.startAt,
-      end_at: payload.endAt,
-      title: payload.title || null,
-      notes: payload.notes || null,
-    })
-    .select("id, room_id, user_id, start_at, end_at, title, notes")
-    .maybeSingle();
+  const repeatCount = Number.isFinite(payload.repeatCount) ? Math.trunc(payload.repeatCount ?? 1) : 1;
+  const normalizedRepeatCount = Math.min(Math.max(repeatCount || 1, 1), 12);
+  const isSeries = normalizedRepeatCount > 1;
+  const title = payload.title || null;
+  const notes = payload.notes || null;
 
-  if (error || !insertedBooking) {
-    return NextResponse.json({ error: error?.message ?? "booking_create_failed" }, { status: 400 });
+  const bookingRows: Array<{
+    id: string;
+    room_id: string;
+    user_id: string;
+    start_at: string;
+    end_at: string;
+    title: string | null;
+    notes: string | null;
+  }> = [];
+
+  if (isSeries) {
+    const { data, error } = await supabase.rpc("create_weekly_booking_series", {
+      p_room_id: room.id,
+      p_start_at: payload.startAt,
+      p_end_at: payload.endAt,
+      p_title: title,
+      p_notes: notes,
+      p_repeat_count: normalizedRepeatCount,
+    });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    for (const row of (data ?? []) as Array<{
+      booking_id: string;
+      start_at: string;
+      end_at: string;
+    }>) {
+      bookingRows.push({
+        id: row.booking_id,
+        room_id: room.id,
+        user_id: user.id,
+        start_at: row.start_at,
+        end_at: row.end_at,
+        title,
+        notes,
+      });
+    }
+  } else {
+    const { data: insertedBooking, error } = await supabase
+      .from("bookings")
+      .insert({
+        room_id: room.id,
+        user_id: user.id,
+        start_at: payload.startAt,
+        end_at: payload.endAt,
+        title,
+        notes,
+      })
+      .select("id, room_id, user_id, start_at, end_at, title, notes")
+      .maybeSingle();
+
+    if (error || !insertedBooking) {
+      return NextResponse.json({ error: error?.message ?? "booking_create_failed" }, { status: 400 });
+    }
+
+    bookingRows.push(insertedBooking);
   }
 
   const recipientEmail = profile?.email || user.email || "";
   if (!recipientEmail) {
     return NextResponse.json({ error: "missing_recipient_email" }, { status: 400 });
   }
-  const subject = `[회의실 예약] ${room.name} 예약이 생성되었습니다.`;
-  const body = formatBookingMessage({
-    title: insertedBooking.title,
-    roomName: room.name,
-    roomNumber: room.room_number,
-    startAt: insertedBooking.start_at,
-    endAt: insertedBooking.end_at,
-  });
 
-  try {
-    const providerResponse = await sendEmailMessage({
-      to: recipientEmail,
-      subject,
-      body,
+  for (const booking of bookingRows) {
+    const subjectPrefix = isSeries ? `[회의실 예약 · 정기 ${normalizedRepeatCount}회]` : "[회의실 예약]";
+    await sendCreatedBookingEmail(supabase, {
+      bookingId: booking.id,
+      userId: user.id,
+      recipientEmail,
+      room,
+      booking,
+      subjectPrefix,
     });
-
-    try {
-      await recordEmailDelivery(supabase, {
-        bookingId: insertedBooking.id,
-        notificationType: "booking_created",
-        actorId: user.id,
-        recipientUserId: user.id,
-        recipientEmail,
-        subject,
-        body,
-        status: "success",
-        providerName: "resend",
-        providerMessageId:
-          typeof providerResponse?.id === "string" ? providerResponse.id : null,
-        providerResponse,
-        payload: {
-          room_id: room.id,
-          room_name: room.name,
-          room_number: room.room_number,
-          title: insertedBooking.title,
-          notes: insertedBooking.notes,
-          start_at: insertedBooking.start_at,
-          end_at: insertedBooking.end_at,
-        },
-      });
-    } catch (logError) {
-      console.error("Failed to record booking creation email log", logError);
-    }
-  } catch (error) {
-    try {
-      await recordEmailDelivery(supabase, {
-        bookingId: insertedBooking.id,
-        notificationType: "booking_created",
-        actorId: user.id,
-        recipientUserId: user.id,
-        recipientEmail,
-        subject,
-        body,
-        status: "failure",
-        providerName: "resend",
-        errorMessage: error instanceof Error ? error.message : "email_send_failed",
-        providerResponse: {},
-        payload: {
-          room_id: room.id,
-          room_name: room.name,
-          room_number: room.room_number,
-          title: insertedBooking.title,
-          notes: insertedBooking.notes,
-          start_at: insertedBooking.start_at,
-          end_at: insertedBooking.end_at,
-        },
-      });
-    } catch (logError) {
-      console.error("Failed to record booking creation email log", logError);
-    }
   }
 
-  return NextResponse.json({ booking: insertedBooking }, { status: 201 });
+  return NextResponse.json(
+    { booking: bookingRows[0], bookings: bookingRows, repeatCount: normalizedRepeatCount },
+    { status: 201 },
+  );
 }

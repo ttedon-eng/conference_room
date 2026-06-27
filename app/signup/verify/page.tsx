@@ -58,7 +58,7 @@ export default async function SignupVerifyPage({
   return (
     <main className="auth-shell">
       <section className="auth-card">
-        <p className="eyebrow">Verification</p>
+        <p className="eyebrow">인증 확인</p>
         <h1>인증번호 확인</h1>
         <p className="auth-copy">
           {verification.email}로 보낸 6자리 인증번호를 입력하세요. 유효 시간은 10분입니다.
@@ -99,4 +99,3 @@ export default async function SignupVerifyPage({
     </main>
   );
 }
-
