@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import StateScreen from "@/components/state-screen";
 import { createClient } from "@/lib/supabase/server";
 
 const DEFAULT_NEXT_PATH = "/bookings";
@@ -40,15 +40,14 @@ export default async function PendingPage({
   }
 
   return (
-    <main className="auth-shell">
-      <section className="auth-card">
-        <p className="eyebrow">승인 대기</p>
-        <h1>승인을 기다리는 중입니다.</h1>
-        <p className="auth-copy">이메일 인증은 끝났습니다. 승인되면 예약 화면으로 이동할 수 있습니다.</p>
-        <Link className="primary-link" href={`/login?next=${encodeURIComponent(nextPath)}`}>
-          로그인으로 돌아가기
-        </Link>
-      </section>
-    </main>
+    <StateScreen
+      eyebrow="승인 대기"
+      title="관리자 승인을 기다리는 중입니다."
+      description="가입 신청은 완료되었습니다. 관리자가 승인하면 예약 화면으로 이동할 수 있습니다."
+      actions={[
+        { href: "/", label: "홈으로" },
+        { href: `/login?next=${encodeURIComponent(nextPath)}`, label: "로그인으로 돌아가기", primary: true },
+      ]}
+    />
   );
 }
